@@ -1,6 +1,8 @@
-﻿namespace CarpoolPlatformAPI.Repositories.IRepository
+﻿using CarpoolPlatformAPI.Models.Domain;
+
+namespace CarpoolPlatformAPI.Repositories.IRepository
 {
-    public interface IRideRepository /*: IRepository<Ride>*/
+    public interface IRideRepository : IRepository<Ride>
     {
 
     }

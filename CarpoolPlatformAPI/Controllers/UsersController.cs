@@ -12,14 +12,15 @@ namespace CarpoolPlatformAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    [Authorize]
+    public class UsersController : ControllerBase
     {
 
         private readonly CarpoolPlatformDbContext _dbContext;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public UserController(CarpoolPlatformDbContext dbContext, IUserRepository userRepository, IMapper mapper)
+        public UsersController(CarpoolPlatformDbContext dbContext, IUserRepository userRepository, IMapper mapper)
         {
             _dbContext = dbContext;
             _userRepository = userRepository;

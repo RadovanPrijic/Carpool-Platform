@@ -27,7 +27,13 @@
   <ItemGroup>
     <Folder Include="Data\Configurations\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Models\DTO\Location\" />
+    <Folder Include="Models\DTO\Notification\" />
     <Folder Include="Models\DTO\Ride\" />
+    <Folder Include="Models\DTO\Booking\" />
+    <Folder Include="Models\DTO\Message\" />
+    <Folder Include="Models\DTO\Picture\" />
+    <Folder Include="Models\DTO\Review\" />
   </ItemGroup>
 
 </Project>
