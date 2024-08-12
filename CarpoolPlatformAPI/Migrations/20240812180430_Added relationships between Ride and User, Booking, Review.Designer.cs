@@ -4,6 +4,7 @@ using CarpoolPlatformAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarpoolPlatformAPI.Migrations
 {
     [DbContext(typeof(CarpoolPlatformDbContext))]
-    partial class CarpoolPlatformDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240812180430_Added relationships between Ride and User, Booking, Review")]
+    partial class AddedrelationshipsbetweenRideandUserBookingReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -569,13 +572,13 @@ namespace CarpoolPlatformAPI.Migrations
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.Ride", "Ride")
                         .WithMany("Bookings")
                         .HasForeignKey("RideId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
                         .WithMany("Bookings")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Ride");
@@ -629,7 +632,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.Booking", "Booking")
                         .WithOne("Review")
                         .HasForeignKey("CarpoolPlatformAPI.Models.Domain.Review", "BookingId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "Reviewee")
@@ -647,7 +650,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.Ride", "Ride")
                         .WithMany("Reviews")
                         .HasForeignKey("RideId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
@@ -664,7 +667,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
                         .WithMany("Rides")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");

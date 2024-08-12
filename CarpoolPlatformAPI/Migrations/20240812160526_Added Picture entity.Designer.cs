@@ -4,6 +4,7 @@ using CarpoolPlatformAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarpoolPlatformAPI.Migrations
 {
     [DbContext(typeof(CarpoolPlatformDbContext))]
-    partial class CarpoolPlatformDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240812160526_Added Picture entity")]
+    partial class AddedPictureentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,9 +43,6 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("RideId")
-                        .HasColumnType("int");
-
                     b.Property<int>("SeatsBooked")
                         .HasColumnType("int");
 
@@ -52,15 +52,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RideId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Bookings");
                 });
@@ -116,22 +108,10 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<bool>("ReadStatus")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ReceiverId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ReceiverId");
-
-                    b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
                 });
@@ -160,13 +140,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
                 });
@@ -192,14 +166,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
 
                     b.ToTable("Pictures");
                 });
@@ -211,9 +178,6 @@ namespace CarpoolPlatformAPI.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Comment")
                         .IsRequired()
@@ -228,30 +192,10 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<string>("RevieweeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ReviewerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("RideId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BookingId")
-                        .IsUnique();
-
-                    b.HasIndex("RevieweeId");
-
-                    b.HasIndex("ReviewerId");
-
-                    b.HasIndex("RideId");
 
                     b.ToTable("Reviews");
                 });
@@ -280,10 +224,6 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<DateTime>("DepartureTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EndLocation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("InsuranceStatus")
                         .HasColumnType("bit");
 
@@ -300,23 +240,13 @@ namespace CarpoolPlatformAPI.Migrations
                     b.Property<int>("SeatsAvailable")
                         .HasColumnType("int");
 
-                    b.Property<string>("StartLocation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("TwoInBackseat")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Rides");
                 });
@@ -564,112 +494,6 @@ namespace CarpoolPlatformAPI.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Booking", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.Ride", "Ride")
-                        .WithMany("Bookings")
-                        .HasForeignKey("RideId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
-                        .WithMany("Bookings")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Ride");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Message", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "Receiver")
-                        .WithMany("ReceivedMessages")
-                        .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "Sender")
-                        .WithMany("SentMessages")
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Notification", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Picture", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
-                        .WithOne("Picture")
-                        .HasForeignKey("CarpoolPlatformAPI.Models.Domain.Picture", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Review", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.Booking", "Booking")
-                        .WithOne("Review")
-                        .HasForeignKey("CarpoolPlatformAPI.Models.Domain.Review", "BookingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "Reviewee")
-                        .WithMany("ReceivedReviews")
-                        .HasForeignKey("RevieweeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "Reviewer")
-                        .WithMany("GivenReviews")
-                        .HasForeignKey("ReviewerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.Ride", "Ride")
-                        .WithMany("Reviews")
-                        .HasForeignKey("RideId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Reviewee");
-
-                    b.Navigation("Reviewer");
-
-                    b.Navigation("Ride");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Ride", b =>
-                {
-                    b.HasOne("CarpoolPlatformAPI.Models.Domain.User", "User")
-                        .WithMany("Rides")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -719,37 +543,6 @@ namespace CarpoolPlatformAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Booking", b =>
-                {
-                    b.Navigation("Review");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Ride", b =>
-                {
-                    b.Navigation("Bookings");
-
-                    b.Navigation("Reviews");
-                });
-
-            modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.User", b =>
-                {
-                    b.Navigation("Bookings");
-
-                    b.Navigation("GivenReviews");
-
-                    b.Navigation("Notifications");
-
-                    b.Navigation("Picture");
-
-                    b.Navigation("ReceivedMessages");
-
-                    b.Navigation("ReceivedReviews");
-
-                    b.Navigation("Rides");
-
-                    b.Navigation("SentMessages");
                 });
 #pragma warning restore 612, 618
         }
