@@ -1,4 +1,5 @@
-﻿using CarpoolPlatformAPI.Models.Domain;
+﻿using CarpoolPlatformAPI.Data.Configurations;
+using CarpoolPlatformAPI.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -24,74 +25,6 @@ namespace CarpoolPlatformAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Ride>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Rides)
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.User)
-                .WithMany(u => u.Bookings)
-                .HasForeignKey(b => b.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.Ride)
-                .WithMany(r => r.Bookings)
-                .HasForeignKey(b => b.RideId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.Review)
-                .WithOne(r => r.Booking)
-                .HasForeignKey<Review>(r => r.BookingId)
-                .IsRequired(true)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Review>()
-                .HasOne(r => r.Reviewer)
-                .WithMany(u => u.GivenReviews)
-                .HasForeignKey(r => r.ReviewerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Review>()
-                .HasOne(r => r.Reviewee)
-                .WithMany(u => u.ReceivedReviews)
-                .HasForeignKey(r => r.RevieweeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Review>()
-                .HasOne(r => r.Ride)
-                .WithMany(r => r.Reviews)
-                .HasForeignKey(r => r.RideId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Message>()
-                .HasOne(m => m.Sender)
-                .WithMany(u => u.SentMessages)
-                .HasForeignKey(m => m.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Message>()
-                .HasOne(m => m.Receiver)
-                .WithMany(u => u.ReceivedMessages)
-                .HasForeignKey(m => m.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Notification>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.Notifications)
-                .HasForeignKey(m => m.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Picture)
-                .WithOne(p => p.User)
-                .HasForeignKey<Picture>(p => p.UserId)
-                .IsRequired(true)
-                .OnDelete(DeleteBehavior.Cascade);
-
             /*string basicUserRoleId = "4066da82-f923-4a73-ae50-a29a5c76c5c1";
             string adminRoleId = "53fee358-1930-4d37-8c9c-4225365c33c1";
 
@@ -114,6 +47,14 @@ namespace CarpoolPlatformAPI.Data
             };
 
             modelBuilder.Entity<IdentityRole>().HasData(roles);*/
+
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new RideConfiguration());
+            modelBuilder.ApplyConfiguration(new BookingConfiguration());
+            modelBuilder.ApplyConfiguration(new ReviewConfiguration());
+            modelBuilder.ApplyConfiguration(new MessageConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+            modelBuilder.ApplyConfiguration(new PictureConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
