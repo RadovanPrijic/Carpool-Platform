@@ -4,11 +4,11 @@ using CarpoolPlatformAPI.Repositories.IRepository;
 
 namespace CarpoolPlatformAPI.Repositories
 {
-    public class RideRepository : Repository<Ride>, IRideRepository
+    public class BookingRepository : Repository<Booking>, IBookingRepository
     {
         private readonly CarpoolPlatformDbContext _db;
 
-        public RideRepository(CarpoolPlatformDbContext db) : base(db)
+        public BookingRepository(CarpoolPlatformDbContext db) : base(db)
         {
             _db = db;
         }

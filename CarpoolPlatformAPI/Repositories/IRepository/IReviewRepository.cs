@@ -2,7 +2,7 @@
 
 namespace CarpoolPlatformAPI.Repositories.IRepository
 {
-    public interface IRideRepository : IRepository<Ride>
+    public interface IReviewRepository : IRepository<Review>
     {
     }
 }

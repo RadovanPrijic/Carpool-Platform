@@ -47,7 +47,7 @@ namespace CarpoolPlatformAPI.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<T> GetAsync(Expression<Func<T, bool>> filter = null, string? includeProperties = null)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter = null, string? includeProperties = null)
         {
             IQueryable<T> query = dbSet;
 

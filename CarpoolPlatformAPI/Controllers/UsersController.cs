@@ -3,7 +3,9 @@ using CarpoolPlatformAPI.CustomActionFilters;
 using CarpoolPlatformAPI.Data;
 using CarpoolPlatformAPI.Models.DTO.Auth;
 using CarpoolPlatformAPI.Models.DTO.Login;
+using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
+using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,16 +17,11 @@ namespace CarpoolPlatformAPI.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
+        private readonly IUserService _userService;
 
-        private readonly CarpoolPlatformDbContext _dbContext;
-        private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
-
-        public UsersController(CarpoolPlatformDbContext dbContext, IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserService userService)
         {
-            _dbContext = dbContext;
-            _userRepository = userRepository;
-            _mapper = mapper;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -33,7 +30,7 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginRequestDTO)
         {
-            var loginResponse = await _userRepository.Login(loginRequestDTO);
+            var loginResponse = await _userService.Login(loginRequestDTO);
 
             if (string.IsNullOrEmpty(loginResponse.Token))
             {
@@ -49,21 +46,72 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO registrationRequestDTO)
         {
-            bool isUserUnique = await _userRepository.isUserUnique(registrationRequestDTO.Email);
+            bool isUserUnique = await _userService.isUserUnique(registrationRequestDTO.Email);
 
             if (!isUserUnique)
             {
                 return BadRequest(new { message = "The entered email address already exists." });
             }
 
-            var userDomainModel = await _userRepository.Register(registrationRequestDTO);
+            var userDTO = await _userService.Register(registrationRequestDTO);
 
-            if (userDomainModel == null)
+            if (userDTO == null)
             {
                 return BadRequest(new { message = "An error has occured in the registration process." });
             }
 
-            return Ok(userDomainModel);
+            return Ok(userDTO);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var userDTOs = await _userService.GetAllUsersAsync();  // Include necessary props here
+
+            return Ok(userDTOs);
+        }
+
+        [HttpGet]
+        [Route("{id:string}")]
+        public async Task<IActionResult> GetUserById([FromRoute] string id)
+        {
+            var userDTO = await _userService.GetUserAsync(u => u.Id == id); // Include necessary props here
+
+            if (userDTO == null)
+            {
+                return NotFound(new { message = "The user has not been found." });
+            }
+
+            return Ok(userDTO);
+        }
+
+        [HttpPut]
+        [Route("{id:string}")]
+        [ValidateModel]
+        public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] UserUpdateDTO userUpdateDTO)
+        {
+            var userDTO = await _userService.UpdateUserAsync(id, userUpdateDTO);
+
+            if (userDTO == null)
+            {
+                return NotFound(new { message = "The user has not been found." });
+            }
+
+            return Ok(userDTO);
+        }
+
+        [HttpDelete]
+        [Route("{id:string}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] string id)
+        {
+            var userDTO = await _userService.RemoveUserAsync(id);
+
+            if(userDTO == null)
+            {
+                return NotFound(new { message = "The user has not been found." });
+            }
+
+            return Ok(userDTO);
         }
     }
 }
