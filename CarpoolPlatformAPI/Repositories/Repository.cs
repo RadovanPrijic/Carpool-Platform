@@ -38,7 +38,8 @@ namespace CarpoolPlatformAPI.Repositories
 
             if (includeProperties != null)
             {
-                foreach (var includeProp in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var includeProp in includeProperties.Split(new char[] { ',' }, 
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     query = query.Include(includeProp);
                 }
@@ -55,7 +56,8 @@ namespace CarpoolPlatformAPI.Repositories
 
             if (includeProperties != null)
             {
-                foreach (var includeProp in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var includeProp in includeProperties.Split(new char[] { ',' },
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     query = query.Include(includeProp);
                 }
