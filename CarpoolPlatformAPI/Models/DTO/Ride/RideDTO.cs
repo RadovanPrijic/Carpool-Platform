@@ -2,5 +2,6 @@
 {
     public class RideDTO
     {
+        public int Id { get; set; }
     }
 }

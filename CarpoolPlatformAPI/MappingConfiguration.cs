@@ -1,4 +1,9 @@
 ﻿using AutoMapper;
+using CarpoolPlatformAPI.Models.Domain;
+using CarpoolPlatformAPI.Models.DTO.Booking;
+using CarpoolPlatformAPI.Models.DTO.Review;
+using CarpoolPlatformAPI.Models.DTO.Ride;
+using CarpoolPlatformAPI.Models.DTO.User;
 
 namespace CarpoolPlatformAPI
 {
@@ -6,23 +11,20 @@ namespace CarpoolPlatformAPI
     {
         public MappingConfiguration() 
         {
-            /*
-            CreateMap<Movie, MovieDTO>().ReverseMap();
-            CreateMap<Movie, MovieCreateDTO>().ReverseMap();
-            CreateMap<Movie, MovieUpdateDTO>().ReverseMap();
-
-            CreateMap<MovieRating, MovieRatingDTO>().ReverseMap();
-            CreateMap<MovieRating, MovieRatingCreateDTO>().ReverseMap();
-            CreateMap<MovieRating, MovieRatingUpdateDTO>().ReverseMap();
-
-            CreateMap<MovieReview, MovieReviewDTO>().ReverseMap();
-            CreateMap<MovieReview, MovieReviewCreateDTO>().ReverseMap();
-            CreateMap<MovieReview, MovieReviewUpdateDTO>().ReverseMap();
-
             CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<User, UserUpdateDTO>().ReverseMap();
 
-            CreateMap<Genre, GenreDTO>().ReverseMap();
-            */
+            CreateMap<Ride, RideDTO>().ReverseMap();
+            CreateMap<Ride, RideCreateDTO>().ReverseMap();
+            CreateMap<Ride, RideUpdateDTO>().ReverseMap();
+
+            CreateMap<Booking, BookingDTO>().ReverseMap();
+            CreateMap<Booking, BookingCreateDTO>().ReverseMap();
+            CreateMap<Booking, BookingUpdateDTO>().ReverseMap();
+
+            CreateMap<Review, ReviewDTO>().ReverseMap();
+            CreateMap<Review, ReviewCreateDTO>().ReverseMap();
+            CreateMap<Review, ReviewUpdateDTO>().ReverseMap();
         }
     }
 }

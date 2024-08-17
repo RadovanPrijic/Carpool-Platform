@@ -128,20 +128,6 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<UserDTO>(user);
         }
 
-        public async Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO)
-        {
-            var user = await _userRepository.GetAsync(u => u.Id == id);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            user = await _userRepository.UpdateAsync(user);
-
-            return _mapper.Map<UserDTO>(user);
-        }
-
         public async Task<UserDTO?> RemoveUserAsync(string id)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id);
@@ -153,6 +139,20 @@ namespace CarpoolPlatformAPI.Services
 
             user.DeletedAt = DateTime.Now;
             user = await _userRepository.UpdateAsync(user);
+
+            return _mapper.Map<UserDTO>(user);
+        }
+
+        public async Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            user = await _userRepository.UpdateAsync(_mapper.Map<User>(userUpdateDTO));
 
             return _mapper.Map<UserDTO>(user);
         }

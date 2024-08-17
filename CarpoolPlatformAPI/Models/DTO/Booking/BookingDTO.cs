@@ -2,5 +2,6 @@
 {
     public class BookingDTO
     {
+        public int Id { get; set; }
     }
 }

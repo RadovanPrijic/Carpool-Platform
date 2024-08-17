@@ -1,5 +1,9 @@
-﻿using CarpoolPlatformAPI.Models.Domain;
+﻿using AutoMapper;
+using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Review;
+using CarpoolPlatformAPI.Models.DTO.Ride;
+using CarpoolPlatformAPI.Repositories;
+using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using System.Linq.Expressions;
 
@@ -7,29 +11,63 @@ namespace CarpoolPlatformAPI.Services
 {
     public class ReviewService : IReviewService
     {
-        public Task<ReviewDTO> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
+        private readonly IReviewRepository _reviewRepository;
+        private readonly IMapper _mapper;
+
+        public ReviewService(IReviewRepository reviewRepository, IMapper mapper)
         {
-            throw new NotImplementedException();
+            _reviewRepository = reviewRepository;
+            _mapper = mapper;
         }
 
-        public Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
+        public async Task<ReviewDTO> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
         {
-            throw new NotImplementedException();
+            var review = await _reviewRepository.CreateAsync(_mapper.Map<Review>(reviewCreateDTO));
+
+            return _mapper.Map<ReviewDTO>(review);
         }
 
-        public Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>> filter = null, string? includeProperties = null)
+        public async Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
         {
-            throw new NotImplementedException();
+            var reviews = await _reviewRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber);
+
+            return _mapper.Map<List<ReviewDTO>>(reviews);
         }
 
-        public Task<ReviewDTO?> RemoveReviewAsync(int id)
+        public async Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>> filter = null, string? includeProperties = null)
         {
-            throw new NotImplementedException();
+            var review = await _reviewRepository.GetAsync(filter, includeProperties);
+
+            return _mapper.Map<ReviewDTO>(review);
         }
 
-        public Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
+        public async Task<ReviewDTO?> RemoveReviewAsync(int id)
         {
-            throw new NotImplementedException();
+            var review = await _reviewRepository.GetAsync(r => r.Id == id);
+
+            if (review == null)
+            {
+                return null;
+            }
+
+            review.DeletedAt = DateTime.Now;
+            review = await _reviewRepository.UpdateAsync(review);
+
+            return _mapper.Map<ReviewDTO>(review);
+        }
+
+        public async Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
+        {
+            var review = await _reviewRepository.GetAsync(r => r.Id == id);
+
+            if (review == null)
+            {
+                return null;
+            }
+
+            review = await _reviewRepository.UpdateAsync(_mapper.Map<Review>(reviewUpdateDTO));
+
+            return _mapper.Map<ReviewDTO>(review);
         }
     }
 }

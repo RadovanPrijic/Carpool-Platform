@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.CustomActionFilters;
 using CarpoolPlatformAPI.Data;
+using CarpoolPlatformAPI.Models.DTO.Ride;
+using CarpoolPlatformAPI.Models.DTO.User;
+using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
+using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,81 +18,71 @@ namespace CarpoolPlatformAPI.Controllers
     public class RidesController : ControllerBase
     {
 
-        private readonly CarpoolPlatformDbContext _dbContext;
-        private readonly IRideRepository _rideRepository;
-        private readonly IMapper _mapper;
+        private readonly IRideService _rideService;
 
-        public RidesController(CarpoolPlatformDbContext dbContext, IRideRepository rideRepository, IMapper mapper)
+        public RidesController(IRideService rideService)
         {
-            _dbContext = dbContext;
-            _rideRepository = rideRepository;
-            _mapper = mapper;
-        }
-
-/*        [HttpGet]
-        public async Task<IActionResult> GetAllMovies()
-        {
-            var rides = await _rideRepository.GetAllAsync(includeProperties: "Genres");
-
-            return Ok(_mapper.Map<List<MovieDTO>>(movies));
+            _rideService = rideService;
         }
 
         [HttpGet]
-        [Route("{id:int}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetMovieById([FromRoute] int id)
+        public async Task<IActionResult> GetAllRides()
         {
-            var movie = await _rideRepository.GetAsync(x => x.Id == id, includeProperties: "Genres");
+            var rideDTOs = await _rideService.GetAllRidesAsync();  // Include necessary props here
 
-            if (movie == null)
-                return NotFound();
+            return Ok(rideDTOs);
+        }
 
-            return Ok(_mapper.Map<MovieDTO>(movie));
+        [HttpGet]
+        [Route("{id:string}")]
+        public async Task<IActionResult> GetRideById([FromRoute] int id)
+        {
+            var rideDTO = await _rideService.GetRideAsync(r => r.Id == id); // Include necessary props here
+
+            if (rideDTO == null)
+            {
+                return NotFound(new { message = "The ride has not been found." });
+            }
+
+            return Ok(rideDTO);
         }
 
         [HttpPost]
         [ValidateModel]
-        public async Task<IActionResult> CreateMovie([FromBody] MovieCreateDTO movieCreateDTO)
+        public async Task<IActionResult> CreateRide([FromBody] RideCreateDTO rideCreateDTO)
         {
-            var movieDomainModel = _mapper.Map<Movie>(movieCreateDTO);
+            var rideDTO = await _rideService.CreateRideAsync(rideCreateDTO);
 
-            movieDomainModel = await _rideRepository.CreateAsync(movieDomainModel);
-
-            var movieDTO = _mapper.Map<MovieDTO>(movieDomainModel);
-
-            return CreatedAtAction(nameof(GetMovieById), new { id = movieDomainModel.Id }, movieDTO);
+            return CreatedAtAction(nameof(GetRideById), new { id = rideDTO.Id }, rideDTO);
         }
 
         [HttpPut]
-        [Route("{id:int}")]
+        [Route("{id:string}")]
         [ValidateModel]
-        public async Task<IActionResult> UpdateMovie([FromRoute] int id, [FromBody] MovieUpdateDTO movieUpdateDTO)
+        public async Task<IActionResult> UpdateRide([FromRoute] int id, [FromBody] RideUpdateDTO rideUpdateDTO)
         {
-            var movieDomainModel = await _rideRepository.GetAsync(x => x.Id == id);
+            var rideDTO = await _rideService.UpdateRideAsync(id, rideUpdateDTO);
+            
+            if (rideDTO == null)
+            {
+                return NotFound(new { message = "The ride has not been found." });
+            }
 
-            if (movieDomainModel == null)
-                return NotFound();
-
-            movieDomainModel = _mapper.Map<Movie>(movieUpdateDTO);
-
-            movieDomainModel = await _rideRepository.UpdateAsync(movieDomainModel);
-
-            return Ok(_mapper.Map<MovieDTO>(movieDomainModel));
+            return Ok(rideDTO);
         }
 
         [HttpDelete]
-        [Route("{id:int}")]
-        public async Task<IActionResult> DeleteMovie([FromRoute] int id)
+        [Route("{id:string}")]
+        public async Task<IActionResult> DeleteRide([FromRoute] int id)
         {
-            var movieDomainModel = await _rideRepository.GetAsync(x => x.Id == id);
+            var rideDTO = await _rideService.RemoveRideAsync(id);
 
-            if (movieDomainModel == null)
-                return NotFound();
+            if (rideDTO == null)
+            {
+                return NotFound(new { message = "The ride has not been found." });
+            }
 
-            movieDomainModel = await _rideRepository.RemoveAsync(movieDomainModel);
-
-            return Ok(_mapper.Map<MovieDTO>(movieDomainModel));
-        }*/
-
+            return Ok(rideDTO);
+        }
     }
 }

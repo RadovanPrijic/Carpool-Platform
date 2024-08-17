@@ -1,5 +1,9 @@
-﻿using CarpoolPlatformAPI.Models.Domain;
+﻿using AutoMapper;
+using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Booking;
+using CarpoolPlatformAPI.Models.DTO.Ride;
+using CarpoolPlatformAPI.Repositories;
+using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using System.Linq.Expressions;
 
@@ -7,29 +11,63 @@ namespace CarpoolPlatformAPI.Services
 {
     public class BookingService : IBookingService
     {
-        public Task<BookingDTO> CreateBookingAsync(BookingCreateDTO bookingCreateDTO)
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IMapper _mapper;
+
+        public BookingService(IBookingRepository bookingRepository, IMapper mapper)
         {
-            throw new NotImplementedException();
+            _bookingRepository = bookingRepository;
+            _mapper = mapper;
         }
 
-        public Task<List<BookingDTO>> GetAllBookingsAsync(Expression<Func<Booking, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
+        public async Task<BookingDTO> CreateBookingAsync(BookingCreateDTO bookingCreateDTO)
         {
-            throw new NotImplementedException();
+            var booking = await _bookingRepository.CreateAsync(_mapper.Map<Booking>(bookingCreateDTO));
+
+            return _mapper.Map<BookingDTO>(booking);
         }
 
-        public Task<BookingDTO?> GetBookingAsync(Expression<Func<Booking, bool>> filter = null, string? includeProperties = null)
+        public async Task<List<BookingDTO>> GetAllBookingsAsync(Expression<Func<Booking, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
         {
-            throw new NotImplementedException();
+            var bookings = await _bookingRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber);
+            
+            return _mapper.Map<List<BookingDTO>>(bookings);
         }
 
-        public Task<BookingDTO?> RemoveBookingAsync(int id)
+        public async Task<BookingDTO?> GetBookingAsync(Expression<Func<Booking, bool>> filter = null, string? includeProperties = null)
         {
-            throw new NotImplementedException();
+            var booking = await _bookingRepository.GetAsync(filter, includeProperties);
+
+            return _mapper.Map<BookingDTO>(booking);
         }
 
-        public Task<BookingDTO?> UpdateBookingAsync(int id, BookingUpdateDTO bookingUpdateDTO)
+        public async Task<BookingDTO?> RemoveBookingAsync(int id)
         {
-            throw new NotImplementedException();
+            var booking = await _bookingRepository.GetAsync(b => b.Id == id);
+
+            if (booking == null)
+            {
+                return null;
+            }
+
+            booking.DeletedAt = DateTime.Now;
+            booking = await _bookingRepository.UpdateAsync(booking);
+
+            return _mapper.Map<BookingDTO>(booking);
+        }
+
+        public async Task<BookingDTO?> UpdateBookingAsync(int id, BookingUpdateDTO bookingUpdateDTO)
+        {
+            var booking = await _bookingRepository.GetAsync(b => b.Id == id);
+
+            if (booking == null)
+            {
+                return null;
+            }
+
+            booking = await _bookingRepository.UpdateAsync(_mapper.Map<Booking>(bookingUpdateDTO));
+
+            return _mapper.Map<BookingDTO>(booking);
         }
     }
 }

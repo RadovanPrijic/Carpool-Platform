@@ -3,6 +3,8 @@ using CarpoolPlatformAPI.Data;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
+using CarpoolPlatformAPI.Services;
+using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -30,11 +32,21 @@ builder.Services.Configure<IdentityOptions>(options =>
     //options.Password.RequiredLength = 8;
 });
 
-
+// Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-/*
 builder.Services.AddScoped<IRideRepository, RideRepository>();
-*/
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPictureRepository, PictureRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+
+// Services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRideService, RideService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfiguration));
 
