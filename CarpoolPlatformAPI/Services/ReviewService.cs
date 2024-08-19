@@ -27,16 +27,18 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<ReviewDTO>(review);
         }
 
-        public async Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
+        public async Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+            int pageSize = 0, int pageNumber = 1, bool? notTracked = null)
         {
-            var reviews = await _reviewRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber);
+            var reviews = await _reviewRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber, notTracked);
 
             return _mapper.Map<List<ReviewDTO>>(reviews);
         }
 
-        public async Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>> filter = null, string? includeProperties = null)
+        public async Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+            bool? notTracked = null)
         {
-            var review = await _reviewRepository.GetAsync(filter, includeProperties);
+            var review = await _reviewRepository.GetAsync(filter, includeProperties, notTracked);
 
             return _mapper.Map<ReviewDTO>(review);
         }

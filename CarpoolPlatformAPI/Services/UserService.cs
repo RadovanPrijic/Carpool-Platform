@@ -114,16 +114,18 @@ namespace CarpoolPlatformAPI.Services
             return new UserDTO();
         }
 
-        public async Task<List<UserDTO>> GetAllUsersAsync(Expression<Func<User, bool>>? filter, string? includeProperties, int pageSize, int pageNumber)
+        public async Task<List<UserDTO>> GetAllUsersAsync(Expression<Func<User, bool>>? filter, string? includeProperties,
+            int pageSize, int pageNumber, bool? notTracked = null)
         {
-            var users = await _userRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber);
+            var users = await _userRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber, notTracked);
 
             return _mapper.Map<List<UserDTO>>(users);
         }
 
-        public async Task<UserDTO?> GetUserAsync(Expression<Func<User, bool>> filter, string? includeProperties)
+        public async Task<UserDTO?> GetUserAsync(Expression<Func<User, bool>>? filter, string? includeProperties,
+            bool? notTracked = null)
         {
-            var user = await _userRepository.GetAsync(filter, includeProperties);
+            var user = await _userRepository.GetAsync(filter, includeProperties, notTracked);
 
             return _mapper.Map<UserDTO>(user);
         }

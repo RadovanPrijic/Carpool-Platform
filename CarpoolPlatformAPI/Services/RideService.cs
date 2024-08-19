@@ -27,16 +27,18 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<RideDTO>(ride);
         }
 
-        public async Task<List<RideDTO>> GetAllRidesAsync(Expression<Func<Ride, bool>>? filter = null, string? includeProperties = null, int pageSize = 0, int pageNumber = 1)
+        public async Task<List<RideDTO>> GetAllRidesAsync(Expression<Func<Ride, bool>>? filter = null, string? includeProperties = null,
+            int pageSize = 0, int pageNumber = 1, bool? notTracked = null)
         {
-            var rides = await _rideRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber);
+            var rides = await _rideRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber, notTracked);
 
             return _mapper.Map<List<RideDTO>>(rides);
         }
 
-        public async Task<RideDTO?> GetRideAsync(Expression<Func<Ride, bool>> filter = null, string? includeProperties = null)
+        public async Task<RideDTO?> GetRideAsync(Expression<Func<Ride, bool>>? filter = null, string? includeProperties = null,
+            bool? notTracked = null)
         {
-            var ride = await _rideRepository.GetAsync(filter, includeProperties);
+            var ride = await _rideRepository.GetAsync(filter, includeProperties, notTracked);
 
             return _mapper.Map<RideDTO>(ride);
         }

@@ -18,9 +18,14 @@ namespace CarpoolPlatformAPI.Repositories
         }
 
         public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
-            int pageSize = 5, int pageNumber = 1)
+            int pageSize = 5, int pageNumber = 1, bool? notTracked = null)
         {
             IQueryable<T> query = dbSet;
+
+            if (notTracked == true)
+            {
+                query = query.AsNoTracking();
+            }
 
             if (filter != null)
             {
@@ -48,11 +53,20 @@ namespace CarpoolPlatformAPI.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter = null, string? includeProperties = null)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null,
+            bool? notTracked = null)
         {
             IQueryable<T> query = dbSet;
 
-            query = query.Where(filter);
+            if (notTracked == true)
+            {
+                query = query.AsNoTracking();
+            }
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
 
             if (includeProperties != null)
             {
