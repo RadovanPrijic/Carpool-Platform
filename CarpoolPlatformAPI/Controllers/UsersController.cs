@@ -64,18 +64,10 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var userDTOs = await _userService.GetAllUsersAsync();  // Include necessary props here
-
-            return Ok(userDTOs);
-        }
-
-        [HttpGet]
         [Route("{id:string}")]
         public async Task<IActionResult> GetUserById([FromRoute] string id)
         {
-            var userDTO = await _userService.GetUserAsync(u => u.Id == id); // Include necessary props here
+            var userDTO = await _userService.GetUserAsync(u => u.Id == id, includeProperties: "Picture");
 
             if (userDTO == null)
             {
@@ -106,7 +98,7 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var userDTO = await _userService.RemoveUserAsync(id);
 
-            if(userDTO == null)
+            if (userDTO == null)
             {
                 return NotFound(new { message = "The user has not been found." });
             }

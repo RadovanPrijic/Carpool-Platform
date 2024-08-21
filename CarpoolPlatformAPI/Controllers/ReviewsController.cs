@@ -21,9 +21,25 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllReviews()
+        [Route("received/{id:string}")]
+        public async Task<IActionResult> GetAllReceivedReviewsForUser([FromRoute] string userId)
         {
-            var reviewDTOs = await _reviewService.GetAllReviewsAsync();  // Include necessary props here
+            var reviewDTOs = await _reviewService.GetAllReviewsAsync(
+                r => r.RevieweeId == userId &&
+                r.DeletedAt == null,
+                includeProperties: "User, User.Picture");
+
+            return Ok(reviewDTOs);
+        }
+
+        [HttpGet]
+        [Route("given/{id:string}")]
+        public async Task<IActionResult> GetAllGivenReviewsForUser([FromRoute] string userId)
+        {
+            var reviewDTOs = await _reviewService.GetAllReviewsAsync(
+                r => r.ReviewerId == userId &&
+                r.DeletedAt == null,
+                includeProperties: "User, User.Picture");
 
             return Ok(reviewDTOs);
         }
@@ -32,7 +48,9 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id:string}")]
         public async Task<IActionResult> GetReviewById([FromRoute] int id)
         {
-            var reviewDTO = await _reviewService.GetReviewAsync(r => r.Id == id); // Include necessary props here
+            var reviewDTO = await _reviewService.GetReviewAsync(
+                r => r.Id == id,
+                includeProperties: "User, User.Picture");
 
             if (reviewDTO == null)
             {

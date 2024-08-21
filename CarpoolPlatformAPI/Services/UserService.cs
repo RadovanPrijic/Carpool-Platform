@@ -101,7 +101,10 @@ namespace CarpoolPlatformAPI.Services
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "Basic_User");
-                    var userToReturn = await _userRepository.GetAsync(u => u.Email == registrationRequestDTO.Email);
+
+                    var userToReturn = await _userRepository.GetAsync(
+                        u => u.Email == registrationRequestDTO.Email,
+                        includeProperties: "Picture");
 
                     return _mapper.Map<UserDTO>(userToReturn);
                 }

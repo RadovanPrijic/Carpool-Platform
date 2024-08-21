@@ -33,11 +33,11 @@ namespace CarpoolPlatformAPI.Repositories
             }
 
             if (pageSize > 0)
-            {
+            {/*
                 if (pageSize > 25)
                 {
                     pageSize = 25;
-                }
+                }*/
                 query = query.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
             }
 

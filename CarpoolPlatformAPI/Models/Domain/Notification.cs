@@ -8,7 +8,6 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
         public string Message { get; set; }
         public bool CheckedStatus { get; set; } = false;
         public DateTime CreatedAt { get; set; }

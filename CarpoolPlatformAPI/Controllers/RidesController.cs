@@ -9,6 +9,8 @@ using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.SqlServer.Server;
+using System.Globalization;
 
 namespace CarpoolPlatformAPI.Controllers
 {
@@ -26,9 +28,36 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllRides()
+        public async Task<IActionResult> GetFilteredRides(
+            [FromQuery] string from,
+            [FromQuery] string to,
+            [FromQuery] string date,
+            [FromQuery] int seats)
         {
-            var rideDTOs = await _rideService.GetAllRidesAsync();  // Include necessary props here
+            string dateFormat = "yyyy-MM-dd";
+            DateTime dateTime = DateTime.ParseExact(date, dateFormat, CultureInfo.InvariantCulture);
+
+            var rideDTOs = await _rideService.GetAllRidesAsync(
+                r => r.StartLocation == from &&
+                     r.EndLocation == to &&
+                     r.DepartureTime.Date == dateTime.Date &&
+                     r.SeatsAvailable >= seats &&
+                     r.DeletedAt == null, 
+                     includeProperties: "User, User.Picture");
+
+            var orderedRideDTOs = rideDTOs;
+            /*var orderedRideDTOs = rideDTOs.OrderBy(r => r.CENA)*/ // Order rides here
+
+            return Ok(orderedRideDTOs);
+        }
+
+        [HttpGet]
+        [Route("all/{id:string}")]
+        public async Task<IActionResult> GetAllRidesForUser([FromRoute] string userId)
+        {
+            var rideDTOs = await _rideService.GetAllRidesAsync(
+                r => r.UserId == userId &&
+                     r.DeletedAt == null); 
 
             return Ok(rideDTOs);
         }
@@ -37,7 +66,9 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id:string}")]
         public async Task<IActionResult> GetRideById([FromRoute] int id)
         {
-            var rideDTO = await _rideService.GetRideAsync(r => r.Id == id); // Include necessary props here
+            var rideDTO = await _rideService.GetRideAsync(
+                r => r.Id == id,
+                     includeProperties: "User, User.Picture");
 
             if (rideDTO == null)
             {

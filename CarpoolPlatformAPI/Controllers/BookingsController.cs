@@ -22,9 +22,13 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBookings()
+        [Route("all/{id:string}")]
+        public async Task<IActionResult> GetAllBookingsForUser([FromRoute] string userId)
         {
-            var bookingDTOs = await _bookingService.GetAllBookingsAsync();  // Include necessary props here
+            var bookingDTOs = await _bookingService.GetAllBookingsAsync(
+                b => b.UserId == userId &&
+                b.DeletedAt == null,
+                includeProperties: "Ride, Review");
 
             return Ok(bookingDTOs);
         }
@@ -33,7 +37,9 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id:string}")]
         public async Task<IActionResult> GetBookingById([FromRoute] int id)
         {
-            var bookingDTO = await _bookingService.GetBookingAsync(b => b.Id == id); // Include necessary props here
+            var bookingDTO = await _bookingService.GetBookingAsync(
+                b => b.Id == id,
+                includeProperties: "Ride, Review");
 
             if (bookingDTO == null)
             {
