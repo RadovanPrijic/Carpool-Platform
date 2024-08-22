@@ -1,4 +1,5 @@
 ﻿using CarpoolPlatformAPI.Models.Domain;
+using CarpoolPlatformAPI.Models.DTO.Location;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using System.Linq.Expressions;
 
@@ -14,5 +15,6 @@ namespace CarpoolPlatformAPI.Services.IService
         Task<RideDTO?> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO);
         Task<RideDTO?> RemoveRideAsync(int id);
         Task ImportLocationsFromExcelAsync(string filePath);
+        Task<List<LocationDTO>> GetAllLocationsAsync(Expression<Func<Location, bool>>? filter = null);
     }
 }

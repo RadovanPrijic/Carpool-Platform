@@ -115,5 +115,14 @@ namespace CarpoolPlatformAPI.Controllers
 
             return Ok(rideDTO);
         }
+
+        [HttpGet]
+        [Route("ride-locations")]
+        public async Task<IActionResult> GetAllLocations()
+        {
+            var locationDTOs = await _rideService.GetAllLocationsAsync();
+
+            return Ok(locationDTOs);
+        }
     }
 }

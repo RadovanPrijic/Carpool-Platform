@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Booking;
+using CarpoolPlatformAPI.Models.DTO.Location;
 using CarpoolPlatformAPI.Models.DTO.Message;
+using CarpoolPlatformAPI.Models.DTO.Notification;
+using CarpoolPlatformAPI.Models.DTO.Picture;
 using CarpoolPlatformAPI.Models.DTO.Review;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Models.DTO.User;
@@ -30,6 +33,13 @@ namespace CarpoolPlatformAPI
             CreateMap<Message, MessageDTO>().ReverseMap();
             CreateMap<Message, MessageCreateDTO>().ReverseMap();
             CreateMap<Message, MessageUpdateDTO>().ReverseMap();
+
+            CreateMap<Picture, PictureDTO>().ReverseMap();
+            CreateMap<Picture, PictureCreateDTO>().ReverseMap();
+
+            CreateMap<Notification, NotificationDTO>().ReverseMap();
+
+            CreateMap<Location, LocationDTO>().ReverseMap();
         }
     }
 }

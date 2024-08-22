@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
+using CarpoolPlatformAPI.Models.DTO.Location;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using System.Drawing.Printing;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services
@@ -12,11 +16,13 @@ namespace CarpoolPlatformAPI.Services
     public class RideService : IRideService
     {
         private readonly IRideRepository _rideRepository;
+        private readonly ILocationRepository _locationRepository;
         private readonly IMapper _mapper;
 
-        public RideService(IRideRepository rideRepository, IMapper mapper)
+        public RideService(IRideRepository rideRepository, ILocationRepository locationRepository, IMapper mapper)
         {
             _rideRepository = rideRepository;
+            _locationRepository = locationRepository;
             _mapper = mapper;
         }
 
@@ -74,7 +80,47 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task ImportLocationsFromExcelAsync(string filePath)
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            var existingLocations = await _locationRepository.GetAllAsync();
+
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            using (var package = new ExcelPackage(stream))
+            {
+                var worksheet = package.Workbook.Worksheets[0];
+                var rowCount = worksheet.Dimension.Rows;
+                var newLocations = new List<Location>();
+
+                for (int row = 2; row <= rowCount; row++) 
+                {
+                    var city = worksheet.Cells[row, 1].Value?.ToString().Trim();
+                    var country = worksheet.Cells[row, 4].Value?.ToString().Trim();
+
+                    if (!existingLocations.Any(l => l.City == city && l.Country == country))
+                    {
+                        var location = new Location
+                        {
+                            City = city,
+                            Country = country,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        newLocations.Add(location);
+                    }
+                }
+
+                if (newLocations.Count > 0)
+                {
+                    await _locationRepository.AddLocationsAsync(newLocations);
+                }
+            }
+        }
+
+        public async Task<List<LocationDTO>> GetAllLocationsAsync(Expression<Func<Location, bool>>? filter = null)
+        {
+            var locations = await _locationRepository.GetAllAsync(filter);
+
+            return _mapper.Map<List<LocationDTO>>(locations);
         }
     }
 }

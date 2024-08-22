@@ -111,6 +111,17 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+var lifetime = app.Lifetime;
+lifetime.ApplicationStarted.Register(async () =>
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var rideService = scope.ServiceProvider.GetRequiredService<RideService>();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "..", "rs.xlsx");
+        await rideService.ImportLocationsFromExcelAsync(filePath);
+    }
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
