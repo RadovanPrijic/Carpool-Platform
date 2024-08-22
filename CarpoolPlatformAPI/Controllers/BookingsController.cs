@@ -38,7 +38,8 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> GetBookingById([FromRoute] int id)
         {
             var bookingDTO = await _bookingService.GetBookingAsync(
-                b => b.Id == id,
+                b => b.Id == id &&
+                b.DeletedAt == null,
                 includeProperties: "Ride, Review");
 
             if (bookingDTO == null)

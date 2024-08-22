@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Picture;
+using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services
@@ -10,31 +13,45 @@ namespace CarpoolPlatformAPI.Services
     public class PictureService : IPictureService
     {
         private readonly IPictureRepository _pictureRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PictureService(IPictureRepository pictureRepository, IMapper mapper, 
+        public PictureService(IPictureRepository pictureRepository, IUserRepository userRepository, IMapper mapper, 
             IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
             _pictureRepository = pictureRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<PictureDTO?> GetPictureAsync(Expression<Func<Picture, bool>>? filter = null)
+        public async Task<PictureDTO?> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
         {
-            throw new NotImplementedException();
-        }
+            var user = await _userRepository.GetAsync(
+                u => u.Id == pictureCreateDTO.UserId && 
+                u.DeletedAt == null, 
+                includeProperties: "Picture");
 
-        public async Task<PictureDTO> CreatePictureAsync(PictureCreateDTO pictureCreateDTO)
-        {
+            if (user == null)
+            {
+                return null; //TODO Throw Error("The user has not been found.")
+            }
+
             ValidateFileUpload(pictureCreateDTO);
 
-            Picture picture = _mapper.Map<Picture>(pictureCreateDTO);
-            picture.FileName = Guid.NewGuid().ToString();
-            
+            var picture = new Picture
+            {
+                File = pictureCreateDTO.File,
+                FileExtension = Path.GetExtension(pictureCreateDTO.File.FileName),
+                FileSizeInBytes = pictureCreateDTO.File.Length,
+                FileName = Guid.NewGuid().ToString(),
+                CreatedAt = DateTime.Now,
+                UserId = pictureCreateDTO.UserId
+            };
+
             var localFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
                 $"{picture.FileName}{picture.FileExtension}");
 
@@ -44,14 +61,47 @@ namespace CarpoolPlatformAPI.Services
             var urlFilePath = $"{_httpContextAccessor.HttpContext!.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_httpContextAccessor.HttpContext.Request.PathBase}/Pictures/{picture.FileName}{picture.FileExtension}";
             picture.FilePath = urlFilePath;
 
-            picture = await _pictureRepository.CreateAsync(picture);
+            if (user.Picture != null)
+            {
+                user.Picture.File = picture.File;
+                user.Picture.FilePath = picture.FilePath;
+                user.Picture.FileExtension = picture.FileExtension;
+                user.Picture.FileName = picture.FileName;
+                user.Picture.FileSizeInBytes = picture.FileSizeInBytes;
+                user.Picture.UpdatedAt = DateTime.Now;
+                await _userRepository.SaveAsync();
+            }
+            else
+            {
+                user.Picture = picture;
+                user.UpdatedAt = DateTime.Now;
+                picture = await _pictureRepository.CreateAsync(picture);
+            }
 
             return _mapper.Map<PictureDTO>(picture);
         }
 
         public async Task<PictureDTO?> RemovePictureAsync(int id)
         {
-            throw new NotImplementedException();
+            var picture = await _pictureRepository.GetAsync(
+                p => p.Id == id && 
+                p.DeletedAt == null,
+                includeProperties: "User, User.Picture");
+
+            if (picture == null)
+            {
+                return null;
+            }
+
+            picture.DeletedAt = DateTime.Now;
+
+            var user = picture.User;
+            user.Picture = null;
+            user.UpdatedAt = DateTime.Now;
+
+            picture = await _pictureRepository.UpdateAsync(picture);
+
+            return _mapper.Map<PictureDTO>(picture);
         }
 
         private void ValidateFileUpload(PictureCreateDTO pictureCreateDTO)
@@ -60,12 +110,12 @@ namespace CarpoolPlatformAPI.Services
 
             if (!allowedExtensions.Contains(Path.GetExtension(pictureCreateDTO.File.FileName)))
             {
-                // Throw Error("Unsupported file extension")
+                //TODO Throw Error("Unsupported file extension")
             }
 
             if (pictureCreateDTO.File.Length > 10485760)
             {
-                // Throw Error("File size more than 10MB, please upload a smaller size file.");
+                //TODO Throw Error("File size more than 10MB, please upload a smaller size file.");
             }
         }
     }

@@ -7,8 +7,7 @@ namespace CarpoolPlatformAPI.Services.IService
 {
     public interface IPictureService
     {
-        Task<PictureDTO?> GetPictureAsync(Expression<Func<Picture, bool>>? filter = null);
-        Task<PictureDTO> CreatePictureAsync(PictureCreateDTO pictureCreateDTO);
+        Task<PictureDTO?> UploadPictureAsync(PictureCreateDTO pictureCreateDTO);
         Task<PictureDTO?> RemovePictureAsync(int id);
     }
 }

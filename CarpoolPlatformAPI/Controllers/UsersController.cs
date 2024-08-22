@@ -71,7 +71,10 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetUserById([FromRoute] string id)
         {
-            var userDTO = await _userService.GetUserAsync(u => u.Id == id, includeProperties: "Picture");
+            var userDTO = await _userService.GetUserAsync(
+                u => u.Id == id &&
+                u.DeletedAt == null,
+                includeProperties: "Picture");
 
             if (userDTO == null)
             {
@@ -115,9 +118,28 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
         {
-            var pictureDTO = await _pictureService.CreatePictureAsync(pictureCreateDTO);
+            var pictureDTO = await _pictureService.UploadPictureAsync(pictureCreateDTO);
+
+            if (pictureDTO == null)
+            {
+                return NotFound(new { message = "The user has not been found." });
+            }
 
             return Ok(pictureDTO);
+        }
+
+        [HttpDelete]
+        [Route("remove-profile-picture/{id:int}")]
+        public async Task<IActionResult> DeleteProfilePicture([FromRoute] int id)
+        {
+            var pictureDTO = await _pictureService.RemovePictureAsync(id);
+
+            if (pictureDTO == null)
+            {
+                return NotFound(new { message = "The profile picture has not been found." });
+            }
+
+            return Ok("The profile picture has been successfully removed.");
         }
     }
 }

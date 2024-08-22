@@ -29,7 +29,7 @@ namespace CarpoolPlatformAPI.Services
             _userRepository = userRepository;
             _userManager = userManager;
             _mapper = mapper;
-            _secretKey = configuration.GetValue<string>("Jwt:SecretKey");
+            _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;
         }
 
         public async Task<bool> isUserUnique(string email)
@@ -91,7 +91,8 @@ namespace CarpoolPlatformAPI.Services
             {
                 Email = registrationRequestDTO.Email,
                 NormalizedEmail = registrationRequestDTO.Email.ToUpper(),
-                UserName = registrationRequestDTO.Email
+                UserName = registrationRequestDTO.Email,
+                CreatedAt = DateTime.Now
             };
 
             try
@@ -133,9 +134,25 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<UserDTO>(user);
         }
 
+        public async Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            user = _mapper.Map<User>(userUpdateDTO);
+            user.UpdatedAt = DateTime.Now;
+            user = await _userRepository.UpdateAsync(user);
+
+            return _mapper.Map<UserDTO>(user);
+        }
+
         public async Task<UserDTO?> RemoveUserAsync(string id)
         {
-            var user = await _userRepository.GetAsync(u => u.Id == id);
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
             if (user == null)
             {
@@ -143,21 +160,10 @@ namespace CarpoolPlatformAPI.Services
             }
 
             user.DeletedAt = DateTime.Now;
+
+            //TODO Update associated entities
+
             user = await _userRepository.UpdateAsync(user);
-
-            return _mapper.Map<UserDTO>(user);
-        }
-
-        public async Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO)
-        {
-            var user = await _userRepository.GetAsync(u => u.Id == id);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            user = await _userRepository.UpdateAsync(_mapper.Map<User>(userUpdateDTO));
 
             return _mapper.Map<UserDTO>(user);
         }

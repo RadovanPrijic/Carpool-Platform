@@ -6,5 +6,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Picture
     {
         [Required]
         public IFormFile File { get; set; }
+        [Required]
+        public string UserId { get; set; }
     }
 }

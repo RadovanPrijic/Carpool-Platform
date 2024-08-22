@@ -45,10 +45,7 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DeletedAt == null, 
                      includeProperties: "User, User.Picture");
 
-            var orderedRideDTOs = rideDTOs;
-            /*var orderedRideDTOs = rideDTOs.OrderBy(r => r.CENA)*/ // Order rides here
-
-            return Ok(orderedRideDTOs);
+            return Ok(rideDTOs);
         }
 
         [HttpGet]
@@ -67,7 +64,8 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> GetRideById([FromRoute] int id)
         {
             var rideDTO = await _rideService.GetRideAsync(
-                r => r.Id == id,
+                r => r.Id == id &&
+                     r.DeletedAt == null,
                      includeProperties: "User, User.Picture");
 
             if (rideDTO == null)
@@ -117,7 +115,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("ride-locations")]
+        [Route("locations")]
         public async Task<IActionResult> GetAllLocations()
         {
             var locationDTOs = await _rideService.GetAllLocationsAsync();

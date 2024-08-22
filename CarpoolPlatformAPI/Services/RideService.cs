@@ -10,25 +10,44 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Drawing.Printing;
 using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CarpoolPlatformAPI.Services
 {
     public class RideService : IRideService
     {
         private readonly IRideRepository _rideRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IBookingRepository _bookingRepository;
         private readonly ILocationRepository _locationRepository;
         private readonly IMapper _mapper;
 
-        public RideService(IRideRepository rideRepository, ILocationRepository locationRepository, IMapper mapper)
+        public RideService(IRideRepository rideRepository, IUserRepository userRepository, IBookingRepository bookingRepository,
+            ILocationRepository locationRepository, IMapper mapper)
         {
             _rideRepository = rideRepository;
+            _userRepository = userRepository;
+            _bookingRepository = bookingRepository;
             _locationRepository = locationRepository;
             _mapper = mapper;
         }
 
         public async Task<RideDTO> CreateRideAsync(RideCreateDTO rideCreateDTO)
         {
-            var ride = await _rideRepository.CreateAsync(_mapper.Map<Ride>(rideCreateDTO));
+            var ride = _mapper.Map<Ride>(rideCreateDTO);
+            ride.CreatedAt = DateTime.Now;
+
+            var user = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId, includeProperties: "Rides");
+
+            if(user == null)
+            {
+                // TODO Throw Error("User has not been found.")
+            }
+
+            user!.Rides.Add(ride);
+            user.UpdatedAt = DateTime.Now;
+
+            ride = await _rideRepository.CreateAsync(ride);
 
             return _mapper.Map<RideDTO>(ride);
         }
@@ -49,31 +68,44 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<RideDTO>(ride);
         }
 
-        public async Task<RideDTO?> RemoveRideAsync(int id)
+        public async Task<RideDTO?> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO)
         {
-            var ride = await _rideRepository.GetAsync(r => r.Id == id);
+            var ride = await _rideRepository.GetAsync(r => r.Id == id && r.DeletedAt == null);
 
             if (ride == null)
             {
                 return null;
             }
 
-            ride.DeletedAt = DateTime.Now;
+            ride = _mapper.Map<Ride>(rideUpdateDTO);
+            ride.UpdatedAt = DateTime.Now;
             ride = await _rideRepository.UpdateAsync(ride);
 
             return _mapper.Map<RideDTO>(ride);
         }
 
-        public async Task<RideDTO?> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO)
+        public async Task<RideDTO?> RemoveRideAsync(int id)
         {
-            var ride = await _rideRepository.GetAsync(r => r.Id == id);
+            var ride = await _rideRepository.GetAsync(
+                r => r.Id == id &&
+                r.DepartureTime.Date > DateTime.Now &&
+                r.DeletedAt == null,
+                includeProperties: "User, Bookings");
 
             if (ride == null)
             {
                 return null;
             }
 
-            ride = await _rideRepository.UpdateAsync(_mapper.Map<Ride>(rideUpdateDTO));
+            foreach (var booking in ride.Bookings)
+            {
+                booking.BookingStatus = "cancelled";
+                booking.UpdatedAt = DateTime.Now;
+            }
+
+            ride.User.UpdatedAt = DateTime.Now;
+            ride.DeletedAt = DateTime.Now;
+            ride = await _rideRepository.UpdateAsync(ride);
 
             return _mapper.Map<RideDTO>(ride);
         }
@@ -93,15 +125,15 @@ namespace CarpoolPlatformAPI.Services
 
                 for (int row = 2; row <= rowCount; row++) 
                 {
-                    var city = worksheet.Cells[row, 1].Value?.ToString().Trim();
-                    var country = worksheet.Cells[row, 4].Value?.ToString().Trim();
+                    var city = worksheet.Cells[row, 1].Value?.ToString()!.Trim();
+                    var country = worksheet.Cells[row, 4].Value?.ToString()!.Trim();
 
                     if (!existingLocations.Any(l => l.City == city && l.Country == country))
                     {
                         var location = new Location
                         {
-                            City = city,
-                            Country = country,
+                            City = city!,
+                            Country = country!,
                             CreatedAt = DateTime.Now
                         };
 
