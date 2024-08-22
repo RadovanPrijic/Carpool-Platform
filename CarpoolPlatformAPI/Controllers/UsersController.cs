@@ -3,12 +3,14 @@ using CarpoolPlatformAPI.CustomActionFilters;
 using CarpoolPlatformAPI.Data;
 using CarpoolPlatformAPI.Models.DTO.Auth;
 using CarpoolPlatformAPI.Models.DTO.Login;
+using CarpoolPlatformAPI.Models.DTO.Picture;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace CarpoolPlatformAPI.Controllers
 {
@@ -18,10 +20,12 @@ namespace CarpoolPlatformAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IPictureService _pictureService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, IPictureService pictureService)
         {
             _userService = userService;
+            _pictureService = pictureService;
         }
 
         [HttpPost]
@@ -64,7 +68,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("{id:string}")]
+        [Route("{id}")]
         public async Task<IActionResult> GetUserById([FromRoute] string id)
         {
             var userDTO = await _userService.GetUserAsync(u => u.Id == id, includeProperties: "Picture");
@@ -78,7 +82,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpPut]
-        [Route("{id:string}")]
+        [Route("{id}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] UserUpdateDTO userUpdateDTO)
         {
@@ -93,7 +97,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("{id:string}")]
+        [Route("{id}")]
         public async Task<IActionResult> DeleteUser([FromRoute] string id)
         {
             var userDTO = await _userService.RemoveUserAsync(id);
@@ -104,6 +108,16 @@ namespace CarpoolPlatformAPI.Controllers
             }
 
             return Ok(userDTO);
+        }
+
+        [HttpPost]
+        [Route("upload-profile-picture")]
+        [ValidateModel]
+        public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
+        {
+            var pictureDTO = await _pictureService.CreatePictureAsync(pictureCreateDTO);
+
+            return Ok(pictureDTO);
         }
     }
 }

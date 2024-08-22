@@ -34,7 +34,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> GetMessageById([FromRoute] int id)
         {
             var messageDTO = await _messageService.GetMessageAsync(
@@ -59,7 +59,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpPut]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateMessage([FromRoute] int id, [FromBody] MessageUpdateDTO messageUpdateDTO)
         {
@@ -74,7 +74,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> DeleteMessage([FromRoute] int id)
         {
             var messageDTO = await _messageService.RemoveMessageAsync(id);

@@ -13,5 +13,6 @@ namespace CarpoolPlatformAPI.Services.IService
         Task<RideDTO> CreateRideAsync(RideCreateDTO rideCreateDTO);
         Task<RideDTO?> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO);
         Task<RideDTO?> RemoveRideAsync(int id);
+        Task ImportLocationsFromExcelAsync(string filePath);
     }
 }

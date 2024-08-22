@@ -52,7 +52,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("all/{id:string}")]
+        [Route("all/{id}")]
         public async Task<IActionResult> GetAllRidesForUser([FromRoute] string userId)
         {
             var rideDTOs = await _rideService.GetAllRidesAsync(
@@ -63,7 +63,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> GetRideById([FromRoute] int id)
         {
             var rideDTO = await _rideService.GetRideAsync(
@@ -88,7 +88,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpPut]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateRide([FromRoute] int id, [FromBody] RideUpdateDTO rideUpdateDTO)
         {
@@ -103,7 +103,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> DeleteRide([FromRoute] int id)
         {
             var rideDTO = await _rideService.RemoveRideAsync(id);

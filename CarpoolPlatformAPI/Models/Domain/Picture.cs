@@ -8,7 +8,12 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string FileLocation { get; set; }
+        [NotMapped]
+        public IFormFile File { get; set; }
+        public string FilePath { get; set; }
+        public string FileExtension { get; set; }
+        public string FileName { get; set; }
+        public long FileSizeInBytes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

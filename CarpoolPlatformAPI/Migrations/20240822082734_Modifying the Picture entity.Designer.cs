@@ -4,6 +4,7 @@ using CarpoolPlatformAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarpoolPlatformAPI.Migrations
 {
     [DbContext(typeof(CarpoolPlatformDbContext))]
-    partial class CarpoolPlatformDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240822082734_Modifying the Picture entity")]
+    partial class ModifyingthePictureentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

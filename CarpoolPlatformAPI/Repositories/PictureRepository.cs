@@ -12,4 +12,5 @@ namespace CarpoolPlatformAPI.Repositories
         {
             _db = db;
         }
+    }
 }

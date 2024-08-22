@@ -71,5 +71,10 @@ namespace CarpoolPlatformAPI.Services
 
             return _mapper.Map<RideDTO>(ride);
         }
+
+        public async Task ImportLocationsFromExcelAsync(string filePath)
+        {
+
+        }
     }
 }

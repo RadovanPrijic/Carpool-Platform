@@ -8,6 +8,7 @@ using CarpoolPlatformAPI.Services.IService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRideService, RideService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IPictureService, PictureService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfiguration));
 
@@ -70,6 +73,8 @@ builder.Services.AddAuthentication(x =>
     });
 
 builder.Services.AddControllers();
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -118,6 +123,12 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Pictures")),
+    RequestPath = "/Pictures"
+});
 
 app.MapControllers();
 

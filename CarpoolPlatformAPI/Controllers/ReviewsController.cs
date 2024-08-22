@@ -21,7 +21,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("received/{id:string}")]
+        [Route("received/{id}")]
         public async Task<IActionResult> GetAllReceivedReviewsForUser([FromRoute] string userId)
         {
             var reviewDTOs = await _reviewService.GetAllReviewsAsync(
@@ -33,7 +33,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("given/{id:string}")]
+        [Route("given/{id}")]
         public async Task<IActionResult> GetAllGivenReviewsForUser([FromRoute] string userId)
         {
             var reviewDTOs = await _reviewService.GetAllReviewsAsync(
@@ -45,7 +45,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> GetReviewById([FromRoute] int id)
         {
             var reviewDTO = await _reviewService.GetReviewAsync(
@@ -70,7 +70,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpPut]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateReview([FromRoute] int id, [FromBody] ReviewUpdateDTO reviewUpdateDTO)
         {
@@ -85,7 +85,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("{id:string}")]
+        [Route("{id:int}")]
         public async Task<IActionResult> DeleteReview([FromRoute] int id)
         {
             var reviewDTO = await _reviewService.RemoveReviewAsync(id);
