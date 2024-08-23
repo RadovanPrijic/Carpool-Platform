@@ -7,6 +7,7 @@ using CarpoolPlatformAPI.Models.DTO.Picture;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,11 +22,13 @@ namespace CarpoolPlatformAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IPictureService _pictureService;
+        private APIResponse _response;
 
         public UsersController(IUserService userService, IPictureService pictureService)
         {
             _userService = userService;
             _pictureService = pictureService;
+            _response = new();
         }
 
         [HttpPost]

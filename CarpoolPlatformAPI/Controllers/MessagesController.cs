@@ -4,6 +4,7 @@ using CarpoolPlatformAPI.Models.DTO.Booking;
 using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +16,13 @@ namespace CarpoolPlatformAPI.Controllers
     [Authorize]
     public class MessagesController : ControllerBase
     {
-        IMessageService _messageService;
+        private readonly IMessageService _messageService;
+        private APIResponse _response;
 
         public MessagesController(IMessageService messageService)
         {
             _messageService = messageService;
+            _response = new();
         }
 
         [HttpGet]

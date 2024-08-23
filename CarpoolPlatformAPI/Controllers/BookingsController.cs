@@ -3,6 +3,7 @@ using CarpoolPlatformAPI.Models.DTO.Booking;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,13 @@ namespace CarpoolPlatformAPI.Controllers
     [Authorize]
     public class BookingsController : ControllerBase
     {
-        IBookingService _bookingService;
+        private readonly IBookingService _bookingService;
+        private APIResponse _response;
 
         public BookingsController(IBookingService bookingService)
         {
             _bookingService = bookingService;
+            _response = new();
         }
 
         [HttpGet]

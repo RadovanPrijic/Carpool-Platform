@@ -3,6 +3,7 @@ using CarpoolPlatformAPI.Models.DTO.Review;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ namespace CarpoolPlatformAPI.Controllers
     [Authorize]
     public class ReviewsController : ControllerBase
     {
-        IReviewService _reviewService;
+        private readonly IReviewService _reviewService;
+        private APIResponse _response;
 
         public ReviewsController(IReviewService reviewService)
         {
             _reviewService = reviewService;
+            _response = new();
         }
 
         [HttpGet]

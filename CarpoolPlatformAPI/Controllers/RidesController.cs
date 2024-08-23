@@ -6,6 +6,7 @@ using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,12 +20,13 @@ namespace CarpoolPlatformAPI.Controllers
     [Authorize]
     public class RidesController : ControllerBase
     {
-
         private readonly IRideService _rideService;
+        private APIResponse _response;
 
         public RidesController(IRideService rideService)
         {
             _rideService = rideService;
+            _response = new();
         }
 
         [HttpGet]
