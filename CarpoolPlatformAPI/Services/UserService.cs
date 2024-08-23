@@ -61,11 +61,11 @@ namespace CarpoolPlatformAPI.Services
                     {
                         Subject = new ClaimsIdentity(new Claim[]
                         {
-                            new Claim(ClaimTypes.Name, user.Id),
+                            new Claim(ClaimTypes.NameIdentifier, user.Id),
                             new Claim(ClaimTypes.Email, user.Email),
                             new Claim(ClaimTypes.Role, roles.FirstOrDefault())
                         }),
-                        Expires = DateTime.UtcNow.AddHours(6),
+                        Expires = DateTime.UtcNow.AddHours(4),
                         SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                     };
 
@@ -105,7 +105,7 @@ namespace CarpoolPlatformAPI.Services
 
                     var userToReturn = await _userRepository.GetAsync(
                         u => u.Email == registrationRequestDTO.Email,
-                        includeProperties: "Picture");
+                        includeProperties: "Picture, Notifications");
 
                     return _mapper.Map<UserDTO>(userToReturn);
                 }

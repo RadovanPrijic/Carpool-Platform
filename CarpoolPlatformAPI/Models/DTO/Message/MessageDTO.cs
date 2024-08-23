@@ -8,7 +8,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Message
         public string Content { get; set; }
         public bool ReadStatus { get; set; }
         public DateTime CreatedAt { get; set; }
-        public UserDTO Sender { get; set; }
-        public UserDTO Receiver { get; set; }
+        public string SenderId { get; set; }
+        public string ReceiverId { get; set; }
     }
 }

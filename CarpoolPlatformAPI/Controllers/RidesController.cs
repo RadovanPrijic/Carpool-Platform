@@ -43,7 +43,7 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DepartureTime.Date == dateTime.Date &&
                      r.SeatsAvailable >= seats &&
                      r.DeletedAt == null, 
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "User, User.Picture, Bookings");
 
             return Ok(rideDTOs);
         }
@@ -54,7 +54,8 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var rideDTOs = await _rideService.GetAllRidesAsync(
                 r => r.UserId == userId &&
-                     r.DeletedAt == null); 
+                     r.DeletedAt == null,
+                     includeProperties: "User, User.Picture, Bookings"); 
 
             return Ok(rideDTOs);
         }
@@ -66,7 +67,7 @@ namespace CarpoolPlatformAPI.Controllers
             var rideDTO = await _rideService.GetRideAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "User, User.Picture, Bookings");
 
             if (rideDTO == null)
             {

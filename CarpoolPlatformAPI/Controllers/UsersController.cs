@@ -74,7 +74,7 @@ namespace CarpoolPlatformAPI.Controllers
             var userDTO = await _userService.GetUserAsync(
                 u => u.Id == id &&
                 u.DeletedAt == null,
-                includeProperties: "Picture");
+                includeProperties: "Picture, Notifications");
 
             if (userDTO == null)
             {
