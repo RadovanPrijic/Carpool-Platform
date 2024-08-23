@@ -60,7 +60,7 @@ namespace CarpoolPlatformAPI.Controllers
             return CreatedAtAction(nameof(GetMessageById), new { id = messageDTO.Id }, messageDTO);
         }
 
-        [HttpPut]
+/*        [HttpPut]
         [Route("{id:int}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateMessage([FromRoute] int id, [FromBody] MessageUpdateDTO messageUpdateDTO)
@@ -73,7 +73,7 @@ namespace CarpoolPlatformAPI.Controllers
             }
 
             return Ok(messageDTO);
-        }
+        }*/
 
         [HttpDelete]
         [Route("{id:int}")]

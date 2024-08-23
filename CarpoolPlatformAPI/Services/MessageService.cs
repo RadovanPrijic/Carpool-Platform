@@ -43,7 +43,7 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<MessageDTO>(message);
         }
 
-        public async Task<MessageDTO?> UpdateMessageAsync(int id, MessageUpdateDTO messageUpdateDTO)
+/*        public async Task<MessageDTO?> UpdateMessageAsync(int id, MessageUpdateDTO messageUpdateDTO)
         {
             var message = await _messageRepository.GetAsync(m => m.Id == id && m.DeletedAt == null);
 
@@ -55,7 +55,7 @@ namespace CarpoolPlatformAPI.Services
             message = await _messageRepository.UpdateAsync(_mapper.Map<Message>(messageUpdateDTO));
 
             return _mapper.Map<MessageDTO>(message);
-        }
+        }*/
 
         public async Task<MessageDTO?> RemoveMessageAsync(int id)
         {

@@ -12,7 +12,7 @@ namespace CarpoolPlatformAPI.Services.IService
         Task<MessageDTO?> GetMessageAsync(Expression<Func<Message, bool>>? filter = null,
             string? includeProperties = null, bool? notTracked = null);
         Task<MessageDTO> CreateMessageAsync(MessageCreateDTO messageCreateDTO);
-        Task<MessageDTO?> UpdateMessageAsync(int id, MessageUpdateDTO messageUpdateDTO);
+        /*Task<MessageDTO?> UpdateMessageAsync(int id, MessageUpdateDTO messageUpdateDTO);*/
         Task<MessageDTO?> RemoveMessageAsync(int id);
     }
 }

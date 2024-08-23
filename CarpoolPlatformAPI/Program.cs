@@ -116,7 +116,7 @@ lifetime.ApplicationStarted.Register(async () =>
 {
     using (var scope = app.Services.CreateScope())
     {
-        var rideService = scope.ServiceProvider.GetRequiredService<RideService>();
+        var rideService = scope.ServiceProvider.GetRequiredService<IRideService>();
         var filePath = Path.Combine(AppContext.BaseDirectory, "..", "rs.xlsx");
         await rideService.ImportLocationsFromExcelAsync(filePath);
     }

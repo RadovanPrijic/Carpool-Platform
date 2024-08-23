@@ -32,7 +32,7 @@ namespace CarpoolPlatformAPI
 
             CreateMap<Message, MessageDTO>().ReverseMap();
             CreateMap<Message, MessageCreateDTO>().ReverseMap();
-            CreateMap<Message, MessageUpdateDTO>().ReverseMap();
+            /*CreateMap<Message, MessageUpdateDTO>().ReverseMap();*/
 
             CreateMap<Picture, PictureDTO>().ReverseMap();
             CreateMap<Picture, PictureCreateDTO>().ReverseMap();
