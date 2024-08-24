@@ -2,6 +2,7 @@
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Auth;
 using CarpoolPlatformAPI.Models.DTO.Login;
+using CarpoolPlatformAPI.Models.DTO.Notification;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
@@ -20,15 +21,17 @@ namespace CarpoolPlatformAPI.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly IValidationService _validationService;
         private string _secretKey;
 
-        public UserService(IUserRepository userRepository, UserManager<User> userManager, IMapper mapper,
-            IConfiguration configuration, IValidationService validationService)
+        public UserService(IUserRepository userRepository, INotificationRepository notificationRepository,  UserManager<User> userManager,
+            IMapper mapper, IConfiguration configuration, IValidationService validationService)
         {
             _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
             _userManager = userManager;
             _mapper = mapper;
             _validationService = validationService;
@@ -169,6 +172,13 @@ namespace CarpoolPlatformAPI.Services
             user = await _userRepository.UpdateAsync(user);
 
             return _mapper.Map<UserDTO>(user);
+        }
+
+        public async Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter)
+        {
+            var notifications = await _notificationRepository.GetAllAsync(filter);
+
+            return _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt));
         }
     }
 }

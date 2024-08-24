@@ -1,6 +1,7 @@
 ﻿using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Auth;
 using CarpoolPlatformAPI.Models.DTO.Login;
+using CarpoolPlatformAPI.Models.DTO.Notification;
 using CarpoolPlatformAPI.Models.DTO.User;
 using System.Linq.Expressions;
 
@@ -17,5 +18,6 @@ namespace CarpoolPlatformAPI.Services.IService
             bool? notTracked = null);
         Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
         Task<UserDTO?> RemoveUserAsync(string id);
+        Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter);
     }
 }

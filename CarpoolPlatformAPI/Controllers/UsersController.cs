@@ -6,6 +6,7 @@ using CarpoolPlatformAPI.Models.DTO.Login;
 using CarpoolPlatformAPI.Models.DTO.Picture;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
+using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
@@ -143,6 +144,15 @@ namespace CarpoolPlatformAPI.Controllers
             }
 
             return Ok("The profile picture has been successfully removed.");
+        }
+
+        [HttpGet]
+        [Route("notifications/{id}")]
+        public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
+        {
+            var rideDTOs = await _userService.GetAllNotificationsForUser(n => n.UserId == userId);
+
+            return Ok(rideDTOs);
         }
     }
 }
