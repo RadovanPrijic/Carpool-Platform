@@ -6,6 +6,7 @@ using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -21,14 +22,16 @@ namespace CarpoolPlatformAPI.Services
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly IValidationService _validationService;
         private string _secretKey;
 
         public UserService(IUserRepository userRepository, UserManager<User> userManager, IMapper mapper,
-            IConfiguration configuration)
+            IConfiguration configuration, IValidationService validationService)
         {
             _userRepository = userRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _validationService = validationService;
             _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;
         }
 

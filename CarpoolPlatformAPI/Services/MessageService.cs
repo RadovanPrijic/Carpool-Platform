@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services
@@ -13,11 +14,13 @@ namespace CarpoolPlatformAPI.Services
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IMapper _mapper;
+        private readonly IValidationService _validationService;
 
-        public MessageService(IMessageRepository messageRepository, IMapper mapper)
+        public MessageService(IMessageRepository messageRepository, IMapper mapper, IValidationService validationService)
         {
             _messageRepository = messageRepository;
             _mapper = mapper;
+            _validationService = validationService;
         }
 
         public async Task<List<MessageDTO>> GetAllMessagesAsync(Expression<Func<Message, bool>>? filter = null,

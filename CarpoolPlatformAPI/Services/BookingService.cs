@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services
@@ -15,14 +16,16 @@ namespace CarpoolPlatformAPI.Services
         private readonly IUserRepository _userRepository;
         private readonly IRideRepository _rideRepository;
         private readonly IMapper _mapper;
+        private readonly IValidationService _validationService;
 
         public BookingService(IBookingRepository bookingRepository, IUserRepository userRepository, IRideRepository rideRepository,
-            IMapper mapper)
+            IMapper mapper, IValidationService validationService)
         {
             _bookingRepository = bookingRepository;
             _userRepository = userRepository;
             _rideRepository = rideRepository;
             _mapper = mapper;
+            _validationService = validationService;
         }
 
         public async Task<BookingDTO> CreateBookingAsync(BookingCreateDTO bookingCreateDTO)

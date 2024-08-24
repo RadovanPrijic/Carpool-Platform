@@ -6,6 +6,7 @@ using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Drawing.Printing;
@@ -21,15 +22,17 @@ namespace CarpoolPlatformAPI.Services
         private readonly IBookingRepository _bookingRepository;
         private readonly ILocationRepository _locationRepository;
         private readonly IMapper _mapper;
+        private readonly IValidationService _validationService;
 
         public RideService(IRideRepository rideRepository, IUserRepository userRepository, IBookingRepository bookingRepository,
-            ILocationRepository locationRepository, IMapper mapper)
+            ILocationRepository locationRepository, IMapper mapper, IValidationService validationService)
         {
             _rideRepository = rideRepository;
             _userRepository = userRepository;
             _bookingRepository = bookingRepository;
             _locationRepository = locationRepository;
             _mapper = mapper;
+            _validationService = validationService;
         }
 
         public async Task<RideDTO> CreateRideAsync(RideCreateDTO rideCreateDTO)

@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services
@@ -13,11 +14,13 @@ namespace CarpoolPlatformAPI.Services
     {
         private readonly IReviewRepository _reviewRepository;
         private readonly IMapper _mapper;
+        private readonly IValidationService _validationService;
 
-        public ReviewService(IReviewRepository reviewRepository, IMapper mapper)
+        public ReviewService(IReviewRepository reviewRepository, IMapper mapper, IValidationService validationService)
         {
             _reviewRepository = reviewRepository;
             _mapper = mapper;
+            _validationService = validationService;
         }
 
         public async Task<ReviewDTO> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)

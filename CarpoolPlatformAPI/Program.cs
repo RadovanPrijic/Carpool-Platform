@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IPictureService, PictureService>();
+builder.Services.AddScoped<IValidationService, ValidationService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfiguration));
 

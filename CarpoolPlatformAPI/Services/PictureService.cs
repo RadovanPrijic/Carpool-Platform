@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Models.DTO.Picture;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
+using CarpoolPlatformAPI.Util;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -17,15 +18,17 @@ namespace CarpoolPlatformAPI.Services
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IValidationService _validationService;
 
         public PictureService(IPictureRepository pictureRepository, IUserRepository userRepository, IMapper mapper, 
-            IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
+            IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IValidationService validationService)
         {
             _pictureRepository = pictureRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
+            _validationService = validationService;
         }
 
         public async Task<PictureDTO?> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
@@ -40,7 +43,7 @@ namespace CarpoolPlatformAPI.Services
                 return null; //TODO Throw Error("The user has not been found.")
             }
 
-            ValidateFileUpload(pictureCreateDTO);
+            _validationService.ValidateFileUpload(pictureCreateDTO); // TODO
 
             var picture = new Picture
             {
@@ -102,21 +105,6 @@ namespace CarpoolPlatformAPI.Services
             picture = await _pictureRepository.UpdateAsync(picture);
 
             return _mapper.Map<PictureDTO>(picture);
-        }
-
-        private void ValidateFileUpload(PictureCreateDTO pictureCreateDTO)
-        {
-            var allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
-
-            if (!allowedExtensions.Contains(Path.GetExtension(pictureCreateDTO.File.FileName)))
-            {
-                //TODO Throw Error("Unsupported file extension")
-            }
-
-            if (pictureCreateDTO.File.Length > 10485760)
-            {
-                //TODO Throw Error("File size more than 10MB, please upload a smaller size file.");
-            }
         }
     }
 }
