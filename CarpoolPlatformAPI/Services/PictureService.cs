@@ -38,12 +38,10 @@ namespace CarpoolPlatformAPI.Services
                 u.DeletedAt == null, 
                 includeProperties: "Picture");
 
-            if (user == null)
+            if(!_validationService.ValidateFileUpload(pictureCreateDTO))
             {
-                return null; //TODO Throw Error("The user has not been found.")
+                return null;
             }
-
-            _validationService.ValidateFileUpload(pictureCreateDTO); // TODO
 
             var picture = new Picture
             {
@@ -64,7 +62,7 @@ namespace CarpoolPlatformAPI.Services
             var urlFilePath = $"{_httpContextAccessor.HttpContext!.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_httpContextAccessor.HttpContext.Request.PathBase}/Pictures/{picture.FileName}{picture.FileExtension}";
             picture.FilePath = urlFilePath;
 
-            if (user.Picture != null)
+            if (user!.Picture != null)
             {
                 user.Picture.File = picture.File;
                 user.Picture.FilePath = picture.FilePath;
@@ -72,6 +70,7 @@ namespace CarpoolPlatformAPI.Services
                 user.Picture.FileName = picture.FileName;
                 user.Picture.FileSizeInBytes = picture.FileSizeInBytes;
                 user.Picture.UpdatedAt = DateTime.Now;
+                user.UpdatedAt = DateTime.Now;
                 await _userRepository.SaveAsync();
             }
             else
@@ -91,7 +90,7 @@ namespace CarpoolPlatformAPI.Services
                 p.DeletedAt == null,
                 includeProperties: "User, User.Picture");
 
-            if (picture == null)
+            if (picture == null || (picture.User.Id != _validationService.GetCurrentUserId()))
             {
                 return null;
             }

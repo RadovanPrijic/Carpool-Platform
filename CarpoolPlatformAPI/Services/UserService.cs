@@ -24,21 +24,19 @@ namespace CarpoolPlatformAPI.Services
         private readonly INotificationRepository _notificationRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly IValidationService _validationService;
         private string _secretKey;
 
         public UserService(IUserRepository userRepository, INotificationRepository notificationRepository,  UserManager<User> userManager,
-            IMapper mapper, IConfiguration configuration, IValidationService validationService)
+            IMapper mapper, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
             _userManager = userManager;
             _mapper = mapper;
-            _validationService = validationService;
             _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;
         }
 
-        public async Task<bool> isUserUnique(string email)
+        public async Task<bool> IsUserUnique(string email)
         {
             var user = await _userRepository.GetAsync(u => u.Email == email);
 
@@ -60,7 +58,7 @@ namespace CarpoolPlatformAPI.Services
 
                 if (isValid)
                 {
-                    var roles = (List<string>)await _userManager.GetRolesAsync(user);
+                    /*var roles = (List<string>)await _userManager.GetRolesAsync(user);*/
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var key = Encoding.UTF8.GetBytes(_secretKey);
                     var tokenDescriptor = new SecurityTokenDescriptor
@@ -68,8 +66,8 @@ namespace CarpoolPlatformAPI.Services
                         Subject = new ClaimsIdentity(new Claim[]
                         {
                             new Claim(ClaimTypes.NameIdentifier, user.Id),
-                            new Claim(ClaimTypes.Email, user.Email),
-                            new Claim(ClaimTypes.Role, roles.FirstOrDefault())
+                            new Claim(ClaimTypes.Email, user.Email!),
+                            /*new Claim(ClaimTypes.Role, roles.FirstOrDefault())*/
                         }),
                         Expires = DateTime.UtcNow.AddHours(4),
                         SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -91,7 +89,7 @@ namespace CarpoolPlatformAPI.Services
             };
         }
 
-        public async Task<UserDTO> Register(RegistrationRequestDTO registrationRequestDTO)
+        public async Task<UserDTO?> Register(RegistrationRequestDTO registrationRequestDTO)
         {
             User user = new()
             {
@@ -110,8 +108,17 @@ namespace CarpoolPlatformAPI.Services
                     await _userManager.AddToRoleAsync(user, "Basic_User");
 
                     var userToReturn = await _userRepository.GetAsync(
-                        u => u.Email == registrationRequestDTO.Email,
-                        includeProperties: "Picture, Notifications");
+                        u => u.Email == registrationRequestDTO.Email);
+
+                    var notification = new Notification
+                    {
+                        Message = "You have been successfully registered. Complete your profile by confirming your email address and uploading a profile picture.",
+                        UserId = userToReturn!.Id,
+                        CreatedAt = DateTime.Now
+                    };
+
+                    userToReturn!.Notifications.Add(notification);
+                    await _notificationRepository.CreateAsync(notification);
 
                     return _mapper.Map<UserDTO>(userToReturn);
                 }
@@ -121,7 +128,7 @@ namespace CarpoolPlatformAPI.Services
                 Console.WriteLine(e.StackTrace);
             }
 
-            return new UserDTO();
+            return null;
         }
 
         public async Task<List<UserDTO>> GetAllUsersAsync(Expression<Func<User, bool>>? filter, string? includeProperties,
@@ -156,7 +163,14 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<UserDTO>(user);
         }
 
-        public async Task<UserDTO?> RemoveUserAsync(string id)
+        public async Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter)
+        {
+            var notifications = await _notificationRepository.GetAllAsync(filter);
+
+            return _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt));
+        }
+
+/*      public async Task<UserDTO?> RemoveUserAsync(string id)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
@@ -167,18 +181,11 @@ namespace CarpoolPlatformAPI.Services
 
             user.DeletedAt = DateTime.Now;
 
-            //TODO Update associated entities
+            // Update associated entities
 
             user = await _userRepository.UpdateAsync(user);
 
             return _mapper.Map<UserDTO>(user);
-        }
-
-        public async Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter)
-        {
-            var notifications = await _notificationRepository.GetAllAsync(filter);
-
-            return _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt));
-        }
+        }*/
     }
 }

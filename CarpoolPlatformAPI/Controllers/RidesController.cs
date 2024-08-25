@@ -21,12 +21,10 @@ namespace CarpoolPlatformAPI.Controllers
     public class RidesController : ControllerBase
     {
         private readonly IRideService _rideService;
-        private APIResponse _response;
 
         public RidesController(IRideService rideService)
         {
             _rideService = rideService;
-            _response = new();
         }
 
         [HttpGet]

@@ -24,21 +24,16 @@ namespace CarpoolPlatformAPI.Util
             return userId;
         }
 
-        public APIResponse? ValidateFileUpload(PictureCreateDTO pictureCreateDTO)
+        public bool ValidateFileUpload(PictureCreateDTO pictureCreateDTO)
         {
             var allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
 
-            if (!allowedExtensions.Contains(Path.GetExtension(pictureCreateDTO.File.FileName)))
+            if (!allowedExtensions.Contains(Path.GetExtension(pictureCreateDTO.File.FileName)) || pictureCreateDTO.File.Length > 10485760)
             {
-                return null; // TODO
+                return false;
             }
 
-            if (pictureCreateDTO.File.Length > 10485760)
-            {
-                return null; // TODO
-            }
-
-            return null; //TODO
+            return true;
         }
     }
 }

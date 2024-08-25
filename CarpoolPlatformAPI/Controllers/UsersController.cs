@@ -23,13 +23,13 @@ namespace CarpoolPlatformAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IPictureService _pictureService;
-        private APIResponse _response;
+        private readonly IValidationService _validationService;
 
-        public UsersController(IUserService userService, IPictureService pictureService)
+        public UsersController(IUserService userService, IPictureService pictureService, IValidationService validationService)
         {
             _userService = userService;
             _pictureService = pictureService;
-            _response = new();
+            _validationService = validationService;
         }
 
         [HttpPost]
@@ -54,7 +54,7 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO registrationRequestDTO)
         {
-            bool isUserUnique = await _userService.isUserUnique(registrationRequestDTO.Email);
+            bool isUserUnique = await _userService.IsUserUnique(registrationRequestDTO.Email);
 
             if (!isUserUnique)
             {
@@ -65,7 +65,7 @@ namespace CarpoolPlatformAPI.Controllers
 
             if (userDTO == null)
             {
-                return BadRequest(new { message = "An error has occured in the registration process." });
+                return BadRequest(new { message = "You have entered invalid registration data." });
             }
 
             return Ok(userDTO);
@@ -93,6 +93,11 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] UserUpdateDTO userUpdateDTO)
         {
+            if (_validationService.GetCurrentUserId() != id)
+            {
+                return Unauthorized(new { message = "You are not authorized to update this user."});
+            }
+
             var userDTO = await _userService.UpdateUserAsync(id, userUpdateDTO);
 
             if (userDTO == null)
@@ -103,10 +108,15 @@ namespace CarpoolPlatformAPI.Controllers
             return Ok(userDTO);
         }
 
-        [HttpDelete]
+/*        [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> DeleteUser([FromRoute] string id)
         {
+            if (_validationService.GetCurrentUserId() != id)
+            {
+                return Unauthorized(new { message = "You are not authorized to delete this user." });
+            }
+
             var userDTO = await _userService.RemoveUserAsync(id);
 
             if (userDTO == null)
@@ -115,6 +125,20 @@ namespace CarpoolPlatformAPI.Controllers
             }
 
             return Ok(userDTO);
+        }*/
+
+        [HttpGet]
+        [Route("notifications/{id}")]
+        public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
+        {
+            if (_validationService.GetCurrentUserId() != userId)
+            {
+                return Unauthorized(new { message = "You are not authorized to access this information." });
+            }
+
+            var notificationDTOs = await _userService.GetAllNotificationsForUser(n => n.UserId == userId);
+
+            return Ok(notificationDTOs);
         }
 
         [HttpPost]
@@ -122,11 +146,16 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
         {
+            if (_validationService.GetCurrentUserId() != pictureCreateDTO.UserId)
+            {
+                return Unauthorized(new { message = "You are not authorized to upload this profile picture." });
+            }
+
             var pictureDTO = await _pictureService.UploadPictureAsync(pictureCreateDTO);
 
             if (pictureDTO == null)
             {
-                return NotFound(new { message = "The user has not been found." });
+                return BadRequest(new { message = "The profile picture must be less than 10MB in size and its extension has to be one of the following: .jpg, .jpeg, .png." });
             }
 
             return Ok(pictureDTO);
@@ -140,19 +169,10 @@ namespace CarpoolPlatformAPI.Controllers
 
             if (pictureDTO == null)
             {
-                return NotFound(new { message = "The profile picture has not been found." });
+                return NotFound(new { message = "The profile picture has not been found."});
             }
 
             return Ok("The profile picture has been successfully removed.");
-        }
-
-        [HttpGet]
-        [Route("notifications/{id}")]
-        public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
-        {
-            var rideDTOs = await _userService.GetAllNotificationsForUser(n => n.UserId == userId);
-
-            return Ok(rideDTOs);
         }
     }
 }
