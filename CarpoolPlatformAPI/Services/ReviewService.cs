@@ -61,9 +61,10 @@ namespace CarpoolPlatformAPI.Services
             var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId, includeProperties: "User");
 
             if (reviewer  == null || reviewee == null || ride == null || booking == null ||
-                ride.Bookings.FirstOrDefault(b => b.UserId == reviewCreateDTO.ReviewerId) == null ||
+                ride.UserId != reviewee.Id ||
+                ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null ||
                 ride.DepartureTime > DateTime.Now ||
-                booking.User.Id != reviewCreateDTO.ReviewerId ||
+                booking.User.Id != reviewer.Id ||
                 booking.BookingStatus != "accepted")
             {
                 return null;
