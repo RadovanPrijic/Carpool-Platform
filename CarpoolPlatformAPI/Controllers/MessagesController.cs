@@ -17,10 +17,12 @@ namespace CarpoolPlatformAPI.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly IMessageService _messageService;
+        private readonly IValidationService _validationService;
 
-        public MessagesController(IMessageService messageService)
+        public MessagesController(IMessageService messageService, IValidationService validationService)
         {
             _messageService = messageService;
+            _validationService = validationService;
         }
 
         [HttpGet]

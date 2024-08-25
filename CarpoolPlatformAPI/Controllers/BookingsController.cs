@@ -16,10 +16,12 @@ namespace CarpoolPlatformAPI.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
+        private readonly IValidationService _validationService;
 
-        public BookingsController(IBookingService bookingService)
+        public BookingsController(IBookingService bookingService, IValidationService validationService)
         {
             _bookingService = bookingService;
+            _validationService = validationService;
         }
 
         [HttpGet]

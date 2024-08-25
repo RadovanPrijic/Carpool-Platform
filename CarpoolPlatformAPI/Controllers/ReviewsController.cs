@@ -15,10 +15,12 @@ namespace CarpoolPlatformAPI.Controllers
     public class ReviewsController : ControllerBase
     {
         private readonly IReviewService _reviewService;
+        private readonly IValidationService _validationService;
 
-        public ReviewsController(IReviewService reviewService)
+        public ReviewsController(IReviewService reviewService, IValidationService validationService)
         {
             _reviewService = reviewService;
+            _validationService = validationService;
         }
 
         [HttpGet]
