@@ -1,4 +1,5 @@
 ﻿using CarpoolPlatformAPI.CustomActionFilters;
+using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Models.DTO.Review;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Services;
@@ -67,7 +68,17 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> CreateReview([FromBody] ReviewCreateDTO reviewCreateDTO)
         {
+            if (_validationService.GetCurrentUserId() != reviewCreateDTO.ReviewerId)
+            {
+                return Unauthorized(new { message = "You are not authorized to post this review." });
+            }
+
             var reviewDTO = await _reviewService.CreateReviewAsync(reviewCreateDTO);
+
+            if (reviewDTO == null)
+            {
+                return BadRequest(new { message = "The provided user and/or ride and/or booking data is invalid." });
+            }
 
             return CreatedAtAction(nameof(GetReviewById), new { id = reviewDTO.Id }, reviewDTO);
         }

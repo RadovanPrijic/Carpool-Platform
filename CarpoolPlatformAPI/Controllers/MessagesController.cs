@@ -56,6 +56,11 @@ namespace CarpoolPlatformAPI.Controllers
                 return NotFound(new { message = "The message has not been found." });
             }
 
+            if (_validationService.GetCurrentUserId() != messageDTO.SenderId)
+            {
+                return Unauthorized(new { message = "You are not authorized to access this information." });
+            }
+
             return Ok(messageDTO);
         }
 
@@ -72,7 +77,7 @@ namespace CarpoolPlatformAPI.Controllers
 
             if(messageDTO == null)
             {
-                return BadRequest(new { message = "The provided user (sender and/or receiver) data is incorrect." });
+                return BadRequest(new { message = "The provided user (sender and/or receiver) data is invalid." });
             }    
 
             return CreatedAtAction(nameof(GetMessageById), new { id = messageDTO.Id }, messageDTO);

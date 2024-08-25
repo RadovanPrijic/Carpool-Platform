@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
+using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Models.DTO.Review;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Repositories;
@@ -13,21 +14,24 @@ namespace CarpoolPlatformAPI.Services
     public class ReviewService : IReviewService
     {
         private readonly IReviewRepository _reviewRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IRideRepository _rideRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
         private readonly IValidationService _validationService;
 
-        public ReviewService(IReviewRepository reviewRepository, IMapper mapper, IValidationService validationService)
+        public ReviewService(IReviewRepository reviewRepository, IUserRepository userRepository, IRideRepository rideRepository,
+            IBookingRepository bookingRepository, INotificationRepository notificationRepository, IMapper mapper, 
+                IValidationService validationService)
         {
             _reviewRepository = reviewRepository;
+            _userRepository = userRepository;
+            _rideRepository = rideRepository;
+            _bookingRepository = bookingRepository;
+            _notificationRepository = notificationRepository;
             _mapper = mapper;
             _validationService = validationService;
-        }
-
-        public async Task<ReviewDTO> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
-        {
-            var review = await _reviewRepository.CreateAsync(_mapper.Map<Review>(reviewCreateDTO));
-
-            return _mapper.Map<ReviewDTO>(review);
         }
 
         public async Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
@@ -46,31 +50,107 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<ReviewDTO>(review);
         }
 
-        public async Task<ReviewDTO?> RemoveReviewAsync(int id)
+        public async Task<ReviewDTO?> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
         {
-            var review = await _reviewRepository.GetAsync(r => r.Id == id);
+            var review = _mapper.Map<Review>(reviewCreateDTO);
+            review.CreatedAt = DateTime.Now;
 
-            if (review == null)
+            var reviewer = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.ReviewerId);
+            var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId);
+            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId, includeProperties: "Reviews");
+            var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId, includeProperties: "User");
+
+            if (reviewer  == null || reviewee == null || ride == null || booking == null ||
+                ride.Bookings.FirstOrDefault(b => b.UserId == reviewCreateDTO.ReviewerId) == null ||
+                ride.DepartureTime > DateTime.Now ||
+                booking.User.Id != reviewCreateDTO.ReviewerId ||
+                booking.BookingStatus != "accepted")
             {
                 return null;
             }
 
-            review.DeletedAt = DateTime.Now;
-            review = await _reviewRepository.UpdateAsync(review);
+            reviewer.GivenReviews.Add(review);
+            reviewer.UpdatedAt = DateTime.Now;
+
+            int numberOfReviews = reviewee.ReceivedReviews.Count;
+            reviewee.Rating = (numberOfReviews * reviewee.Rating + reviewCreateDTO.Rating) / (numberOfReviews + 1);
+            reviewee.ReceivedReviews.Add(review);
+
+            ride.Reviews.Add(review);
+            ride.UpdatedAt = DateTime.Now;
+
+            booking.Review = review;
+            booking.UpdatedAt = DateTime.Now;
+
+            review = await _reviewRepository.CreateAsync(review);
+
+            var notification = new Notification
+            {
+                Message = $"Your ride has been reviewed by {reviewer.FirstName} ${reviewer.LastName}.",
+                UserId = reviewee.Id,
+                CreatedAt = DateTime.Now
+            };
+
+            reviewee.Notifications.Add(notification);
+            reviewee.UpdatedAt = DateTime.Now;
+
+            await _notificationRepository.CreateAsync(notification);
 
             return _mapper.Map<ReviewDTO>(review);
         }
 
         public async Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
         {
-            var review = await _reviewRepository.GetAsync(r => r.Id == id);
+            var review = await _reviewRepository.GetAsync(r => r.Id == id, includeProperties: "Reviewee, Reviewee.ReceivedReviews");
 
-            if (review == null)
+            if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
             {
                 return null;
             }
 
+            if(reviewUpdateDTO.Rating != review.Rating)
+            {
+                var reviewee = review.Reviewee;
+                var oldReview = reviewee.ReceivedReviews.FirstOrDefault(r => r.Id == review.Id);
+                int numberOfReviews = reviewee.ReceivedReviews.Count;
+
+                reviewee.Rating = ((numberOfReviews * reviewee.Rating) + (reviewUpdateDTO.Rating - oldReview!.Rating)) / numberOfReviews;
+                reviewee.UpdatedAt = DateTime.Now;
+            }
+
+            review.UpdatedAt = DateTime.Now;
             review = await _reviewRepository.UpdateAsync(_mapper.Map<Review>(reviewUpdateDTO));
+
+            return _mapper.Map<ReviewDTO>(review);
+        }
+
+        public async Task<ReviewDTO?> RemoveReviewAsync(int id)
+        {
+            var review = await _reviewRepository.GetAsync(r => r.Id == id, includeProperties: "Reviewer, Reviewee, Ride, Booking");
+
+            if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
+            {
+                return null;
+            }
+
+            var reviewer = review.Reviewer;
+            reviewer.GivenReviews.Remove(review);
+            reviewer.UpdatedAt = DateTime.Now;
+
+            var reviewee = review.Reviewee;
+            reviewee.ReceivedReviews.Remove(review);
+            reviewee.UpdatedAt = DateTime.Now;
+
+            var ride = review.Ride;
+            ride.Reviews.Remove(review);
+            ride.UpdatedAt = DateTime.Now;
+
+            var booking = review.Booking;
+            booking.Review = null;
+            booking.UpdatedAt = DateTime.Now;
+
+            review.DeletedAt = DateTime.Now;
+            review = await _reviewRepository.UpdateAsync(review);
 
             return _mapper.Map<ReviewDTO>(review);
         }

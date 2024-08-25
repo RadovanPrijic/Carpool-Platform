@@ -106,7 +106,9 @@ namespace CarpoolPlatformAPI.Services
                 booking.UpdatedAt = DateTime.Now;
             }
 
+            ride.User.Rides.Remove(ride);
             ride.User.UpdatedAt = DateTime.Now;
+
             ride.DeletedAt = DateTime.Now;
             ride = await _rideRepository.UpdateAsync(ride);
 
