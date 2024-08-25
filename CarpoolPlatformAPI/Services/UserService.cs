@@ -58,7 +58,7 @@ namespace CarpoolPlatformAPI.Services
 
                 if (isValid)
                 {
-                    /*var roles = (List<string>)await _userManager.GetRolesAsync(user);*/
+                    //var roles = (List<string>)await _userManager.GetRolesAsync(user);
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var key = Encoding.UTF8.GetBytes(_secretKey);
                     var tokenDescriptor = new SecurityTokenDescriptor
@@ -67,7 +67,7 @@ namespace CarpoolPlatformAPI.Services
                         {
                             new Claim(ClaimTypes.NameIdentifier, user.Id),
                             new Claim(ClaimTypes.Email, user.Email!),
-                            /*new Claim(ClaimTypes.Role, roles.FirstOrDefault())*/
+                            //new Claim(ClaimTypes.Role, roles.FirstOrDefault())
                         }),
                         Expires = DateTime.UtcNow.AddHours(4),
                         SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -170,22 +170,22 @@ namespace CarpoolPlatformAPI.Services
             return _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt));
         }
 
-/*      public async Task<UserDTO?> RemoveUserAsync(string id)
-        {
-            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
+        //public async Task<UserDTO?> RemoveUserAsync(string id)
+        //{
+        //    var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
-            if (user == null)
-            {
-                return null;
-            }
+        //    if (user == null)
+        //    {
+        //        return null;
+        //    }
 
-            user.DeletedAt = DateTime.Now;
+        //    user.DeletedAt = DateTime.Now;
 
-            // Update associated entities
+        //    // Update associated entities
 
-            user = await _userRepository.UpdateAsync(user);
+        //    user = await _userRepository.UpdateAsync(user);
 
-            return _mapper.Map<UserDTO>(user);
-        }*/
+        //    return _mapper.Map<UserDTO>(user);
+        //}
     }
 }

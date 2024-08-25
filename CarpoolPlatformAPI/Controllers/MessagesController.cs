@@ -8,6 +8,7 @@ using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace CarpoolPlatformAPI.Controllers
 {
@@ -26,12 +27,18 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllConversationMessages([FromQuery] string sender, [FromQuery] string receiver)
+        public async Task<IActionResult> GetAllConversationMessages([FromQuery] string userOne, [FromQuery] string userTwo)
         {
+            if (_validationService.GetCurrentUserId() != userOne || _validationService.GetCurrentUserId() != userTwo)
+            {
+                return Unauthorized(new { message = "You are not authorized to access this information." });
+            }
+
             var messageDTOs = await _messageService.GetAllMessagesAsync(
-                m => m.SenderId == sender &&
-                m.ReceiverId == receiver &&
-                m.DeletedAt == null);
+                m => (m.SenderId == userOne &&
+                m.ReceiverId == userTwo) ||
+                (m.SenderId == userTwo &&
+                m.ReceiverId == userOne));
 
             var orderedMessageDTOs = messageDTOs.OrderBy(m => m.CreatedAt);
 
@@ -42,9 +49,7 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> GetMessageById([FromRoute] int id)
         {
-            var messageDTO = await _messageService.GetMessageAsync(
-                m => m.Id == id,
-                includeProperties: "Sender, Receiver");
+            var messageDTO = await _messageService.GetMessageAsync(m => m.Id == id);
 
             if (messageDTO == null)
             {
@@ -58,31 +63,27 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> CreateMessage([FromBody] MessageCreateDTO messageCreateDTO)
         {
+            if (_validationService.GetCurrentUserId() != messageCreateDTO.SenderId)
+            {
+                return Unauthorized(new { message = "You are not authorized to send this message." });
+            }
+
             var messageDTO = await _messageService.CreateMessageAsync(messageCreateDTO);
+
+            if(messageDTO == null)
+            {
+                return BadRequest(new { message = "The provided user (sender and/or receiver) data is incorrect." });
+            }    
 
             return CreatedAtAction(nameof(GetMessageById), new { id = messageDTO.Id }, messageDTO);
         }
 
-/*        [HttpPut]
+        [HttpPut]
         [Route("{id:int}")]
         [ValidateModel]
         public async Task<IActionResult> UpdateMessage([FromRoute] int id, [FromBody] MessageUpdateDTO messageUpdateDTO)
         {
             var messageDTO = await _messageService.UpdateMessageAsync(id, messageUpdateDTO);
-
-            if (messageDTO == null)
-            {
-                return NotFound(new { message = "The message has not been found." });
-            }
-
-            return Ok(messageDTO);
-        }*/
-
-        [HttpDelete]
-        [Route("{id:int}")]
-        public async Task<IActionResult> DeleteMessage([FromRoute] int id)
-        {
-            var messageDTO = await _messageService.RemoveMessageAsync(id);
 
             if (messageDTO == null)
             {

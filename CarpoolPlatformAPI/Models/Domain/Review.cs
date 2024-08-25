@@ -27,25 +27,21 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         public string ReviewerId { get; set; }
 
-        [Required]
         public User Reviewer { get; set; } = null!;
 
         [Required]
         public string RevieweeId { get; set; }
 
-        [Required]
         public User Reviewee { get; set; } = null!;
 
         [Required]
         public int RideId { get; set; }
 
-        [Required]
         public Ride Ride { get; set; } = null!;
 
         [Required]
         public int BookingId { get; set; }
 
-        [Required]
         public Booking Booking { get; set; } = null!;
     }
 }

@@ -18,7 +18,7 @@ namespace CarpoolPlatformAPI.Services.IService
         Task<UserDTO?> GetUserAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
             bool? notTracked = null);
         Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
-/*        Task<UserDTO?> RemoveUserAsync(string id);*/
         Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter);
+        //Task<UserDTO?> RemoveUserAsync(string id);
     }
 }

@@ -90,7 +90,7 @@ namespace CarpoolPlatformAPI.Services
                 p.DeletedAt == null,
                 includeProperties: "User, User.Picture");
 
-            if (picture == null || (picture.User.Id != _validationService.GetCurrentUserId()))
+            if (picture == null || picture.User.Id != _validationService.GetCurrentUserId())
             {
                 return null;
             }

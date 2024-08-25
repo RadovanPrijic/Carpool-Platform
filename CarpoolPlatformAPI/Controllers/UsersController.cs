@@ -108,25 +108,6 @@ namespace CarpoolPlatformAPI.Controllers
             return Ok(userDTO);
         }
 
-/*        [HttpDelete]
-        [Route("{id}")]
-        public async Task<IActionResult> DeleteUser([FromRoute] string id)
-        {
-            if (_validationService.GetCurrentUserId() != id)
-            {
-                return Unauthorized(new { message = "You are not authorized to delete this user." });
-            }
-
-            var userDTO = await _userService.RemoveUserAsync(id);
-
-            if (userDTO == null)
-            {
-                return NotFound(new { message = "The user has not been found." });
-            }
-
-            return Ok(userDTO);
-        }*/
-
         [HttpGet]
         [Route("notifications/{id}")]
         public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
@@ -174,5 +155,24 @@ namespace CarpoolPlatformAPI.Controllers
 
             return Ok("The profile picture has been successfully removed.");
         }
+
+        //[HttpDelete]
+        //[Route("{id}")]
+        //public async Task<IActionResult> DeleteUser([FromRoute] string id)
+        //{
+        //    if (_validationService.GetCurrentUserId() != id)
+        //    {
+        //        return Unauthorized(new { message = "You are not authorized to delete this user." });
+        //    }
+
+        //    var userDTO = await _userService.RemoveUserAsync(id);
+
+        //    if (userDTO == null)
+        //    {
+        //        return NotFound(new { message = "The user has not been found." });
+        //    }
+
+        //    return Ok(userDTO);
+        //}
     }
 }

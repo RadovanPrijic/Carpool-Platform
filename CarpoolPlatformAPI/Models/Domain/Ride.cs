@@ -49,7 +49,6 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         public string UserId { get; set; }
 
-        [Required]
         public User User { get; set; } = null!;
 
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();

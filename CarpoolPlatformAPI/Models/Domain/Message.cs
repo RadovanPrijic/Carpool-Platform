@@ -24,13 +24,11 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         public string SenderId { get; set; }
 
-        [Required]
         public User Sender { get; set; } = null!;
 
         [Required]
         public string ReceiverId { get; set; }
 
-        [Required]
         public User Receiver { get; set; } = null!;
     }
 }

@@ -24,7 +24,6 @@ namespace CarpoolPlatformAPI.Models.Domain
         [Required]
         public string UserId { get; set; }
 
-        [Required]
         public User User { get; set; } = null!;
     }
 }
