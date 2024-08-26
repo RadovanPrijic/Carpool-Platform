@@ -1,17 +1,12 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.CustomActionFilters;
-using CarpoolPlatformAPI.Data;
 using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Models.DTO.User;
-using CarpoolPlatformAPI.Repositories;
-using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SqlServer.Server;
 using System.Globalization;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
@@ -39,7 +34,7 @@ namespace CarpoolPlatformAPI.Controllers
             string dateFormat = "yyyy-MM-dd";
             DateTime dateTime = DateTime.ParseExact(date, dateFormat, CultureInfo.InvariantCulture);
 
-            var rideDTOs = await _rideService.GetAllRidesAsync(
+            var serviceResponse = await _rideService.GetAllRidesAsync(
                 r => r.StartLocation == from &&
                      r.EndLocation == to &&
                      r.DepartureTime.Date == dateTime.Date &&
@@ -47,45 +42,72 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DeletedAt == null, 
                      includeProperties: "User, User.Picture, Bookings");
 
-            return Ok(rideDTOs);
+            switch (serviceResponse.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            }
         }
 
         [HttpGet]
         [Route("all/{id}")]
         public async Task<IActionResult> GetAllRidesForUser([FromRoute] string userId)
         {
-            var rideDTOs = await _rideService.GetAllRidesAsync(
+            var serviceResponse = await _rideService.GetAllRidesAsync(
                 r => r.UserId == userId &&
                      r.DeletedAt == null,
-                     includeProperties: "User, User.Picture, Bookings"); 
+                     includeProperties: "User, User.Picture, Bookings");
 
-            return Ok(rideDTOs);
+            switch (serviceResponse.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            }
         }
 
         [HttpGet]
         [Route("{id:int}")]
         public async Task<IActionResult> GetRideById([FromRoute] int id)
         {
-            var rideDTO = await _rideService.GetRideAsync(
+            var serviceResponse = await _rideService.GetRideAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
 
-            if (rideDTO == null)
+            switch (serviceResponse.StatusCode)
             {
-                return NotFound(new { message = "The ride has not been found." });
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                case HttpStatusCode.NotFound:
+                    return NotFound(new { message = serviceResponse.ErrorMessage });
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
             }
-
-            return Ok(rideDTO);
         }
 
         [HttpPost]
         [ValidateModel]
         public async Task<IActionResult> CreateRide([FromBody] RideCreateDTO rideCreateDTO)
         {
-            var rideDTO = await _rideService.CreateRideAsync(rideCreateDTO);
+            var serviceResponse = await _rideService.CreateRideAsync(rideCreateDTO);
 
-            return CreatedAtAction(nameof(GetRideById), new { id = rideDTO.Id }, rideDTO);
+            switch (serviceResponse.StatusCode)
+            {
+                case HttpStatusCode.Created:
+                    return CreatedAtAction(nameof(GetRideById), new { id = serviceResponse.Data!.Id }, serviceResponse.Data);
+                case HttpStatusCode.NotFound:
+                    return NotFound(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.Unauthorized:
+                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(new { message = serviceResponse.ErrorMessage });
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            }
         }
 
         [HttpPut]
@@ -93,37 +115,57 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UpdateRide([FromRoute] int id, [FromBody] RideUpdateDTO rideUpdateDTO)
         {
-            var rideDTO = await _rideService.UpdateRideAsync(id, rideUpdateDTO);
-            
-            if (rideDTO == null)
-            {
-                return NotFound(new { message = "The ride has not been found." });
-            }
+            var serviceResponse = await _rideService.UpdateRideAsync(id, rideUpdateDTO);
 
-            return Ok(rideDTO);
+            switch (serviceResponse.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                case HttpStatusCode.NotFound:
+                    return NotFound(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.Unauthorized:
+                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(new { message = serviceResponse.ErrorMessage });
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            }
         }
 
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<IActionResult> DeleteRide([FromRoute] int id)
         {
-            var rideDTO = await _rideService.RemoveRideAsync(id);
+            var serviceResponse = await _rideService.RemoveRideAsync(id);
 
-            if (rideDTO == null)
+            switch (serviceResponse.StatusCode)
             {
-                return NotFound(new { message = "The ride has not been found." });
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                case HttpStatusCode.NotFound:
+                    return NotFound(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.Unauthorized:
+                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(new { message = serviceResponse.ErrorMessage });
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
             }
-
-            return Ok(rideDTO);
         }
 
         [HttpGet]
         [Route("locations")]
         public async Task<IActionResult> GetAllLocations()
         {
-            var locationDTOs = await _rideService.GetAllLocationsAsync();
+            var serviceResponse = await _rideService.GetAllLocationsAsync();
 
-            return Ok(locationDTOs);
+            switch (serviceResponse.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    return Ok(serviceResponse.Data);
+                default:
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            }
         }
     }
 }

@@ -102,7 +102,10 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
         {
-            var review = await _reviewRepository.GetAsync(r => r.Id == id, includeProperties: "Reviewee, Reviewee.ReceivedReviews");
+            var review = await _reviewRepository.GetAsync(
+                r => r.Id == id &&
+                r.DeletedAt == null,
+                includeProperties: "Reviewee, Reviewee.ReceivedReviews");
 
             if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
             {
@@ -119,15 +122,19 @@ namespace CarpoolPlatformAPI.Services
                 reviewee.UpdatedAt = DateTime.Now;
             }
 
+            review = _mapper.Map<Review>(reviewUpdateDTO);
             review.UpdatedAt = DateTime.Now;
-            review = await _reviewRepository.UpdateAsync(_mapper.Map<Review>(reviewUpdateDTO));
+            review = await _reviewRepository.UpdateAsync(review);
 
             return _mapper.Map<ReviewDTO>(review);
         }
 
         public async Task<ReviewDTO?> RemoveReviewAsync(int id)
         {
-            var review = await _reviewRepository.GetAsync(r => r.Id == id, includeProperties: "Reviewer, Reviewee, Ride, Booking");
+            var review = await _reviewRepository.GetAsync(
+                r => r.Id == id &&
+                r.DeletedAt == null,
+                includeProperties: "Reviewer, Reviewee, Ride, Booking");
 
             if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
             {
@@ -140,6 +147,9 @@ namespace CarpoolPlatformAPI.Services
 
             var reviewee = review.Reviewee;
             reviewee.ReceivedReviews.Remove(review);
+
+            // TODO Modify reviewee's rating
+
             reviewee.UpdatedAt = DateTime.Now;
 
             var ride = review.Ride;
