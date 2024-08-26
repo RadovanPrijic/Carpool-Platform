@@ -1,4 +1,6 @@
 ﻿using CarpoolPlatformAPI.Models.DTO.Picture;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using System.Security.Claims;
 
 namespace CarpoolPlatformAPI.Util
@@ -35,5 +37,27 @@ namespace CarpoolPlatformAPI.Util
 
             return true;
         }
+
+        public static IActionResult HandleServiceResponse<T>(
+            ServiceResponse<T> serviceResponse,
+            ControllerBase? controller = null,
+            string? actionName = null,
+            object? routeValues = null)
+        {
+            if (serviceResponse.StatusCode == HttpStatusCode.Created && controller != null && actionName != null && routeValues != null)
+            {
+                return controller.CreatedAtAction(actionName, routeValues, serviceResponse.Data);
+            }
+
+            return serviceResponse.StatusCode switch
+            {
+                HttpStatusCode.OK => new OkObjectResult(serviceResponse.Data),
+                HttpStatusCode.NotFound => new NotFoundObjectResult(new { message = serviceResponse.ErrorMessage }),
+                HttpStatusCode.Unauthorized => new UnauthorizedObjectResult(new { message = serviceResponse.ErrorMessage }),
+                HttpStatusCode.BadRequest => new BadRequestObjectResult(new { message = serviceResponse.ErrorMessage }),
+                _ => new ObjectResult("An unexpected error occurred.") { StatusCode = StatusCodes.Status500InternalServerError }
+            };
+        }
+
     }
 }

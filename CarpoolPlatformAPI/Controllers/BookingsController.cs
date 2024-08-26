@@ -1,11 +1,8 @@
 ﻿using CarpoolPlatformAPI.CustomActionFilters;
 using CarpoolPlatformAPI.Models.DTO.Booking;
-using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarpoolPlatformAPI.Controllers
@@ -16,50 +13,43 @@ namespace CarpoolPlatformAPI.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
-        private readonly IValidationService _validationService;
 
-        public BookingsController(IBookingService bookingService, IValidationService validationService)
+        public BookingsController(IBookingService bookingService)
         {
             _bookingService = bookingService;
-            _validationService = validationService;
         }
 
         [HttpGet]
         [Route("all/{id}")]
         public async Task<IActionResult> GetAllBookingsForUser([FromRoute] string userId)
         {
-            var bookingDTOs = await _bookingService.GetAllBookingsAsync(
+            var serviceResponse = await _bookingService.GetAllBookingsAsync(
                 b => b.UserId == userId &&
-                b.DeletedAt == null,
-                includeProperties: "Ride, Review");
+                     b.DeletedAt == null,
+                     includeProperties: "Ride, Review");
 
-            return Ok(bookingDTOs);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
         [Route("{id:int}")]
         public async Task<IActionResult> GetBookingById([FromRoute] int id)
         {
-            var bookingDTO = await _bookingService.GetBookingAsync(
+            var serviceResponse = await _bookingService.GetBookingAsync(
                 b => b.Id == id &&
-                b.DeletedAt == null,
-                includeProperties: "Ride, Review");
+                     b.DeletedAt == null,
+                     includeProperties: "Ride, Review");
 
-            if (bookingDTO == null)
-            {
-                return NotFound(new { message = "The booking has not been found." });
-            }
-
-            return Ok(bookingDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [ValidateModel]
         public async Task<IActionResult> CreateBooking([FromBody] BookingCreateDTO bookingCreateDTO)
         {
-            var bookingDTO = await _bookingService.CreateBookingAsync(bookingCreateDTO);
+            var serviceResponse = await _bookingService.CreateBookingAsync(bookingCreateDTO);
 
-            return CreatedAtAction(nameof(GetBookingById), new { id = bookingDTO.Id }, bookingDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetBookingById), new { id = serviceResponse.Data!.Id });
         }
 
         [HttpPut]
@@ -67,28 +57,18 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UpdateBooking([FromRoute] int id, [FromBody] BookingUpdateDTO bookingUpdateDTO)
         {
-            var bookingDTO = await _bookingService.UpdateBookingAsync(id, bookingUpdateDTO);
+            var serviceResponse = await _bookingService.UpdateBookingAsync(id, bookingUpdateDTO);
 
-            if (bookingDTO == null)
-            {
-                return NotFound(new { message = "The booking has not been found." });
-            }
-
-            return Ok(bookingDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<IActionResult> DeleteBooking([FromRoute] int id)
         {
-            var bookingDTO = await _bookingService.RemoveBookingAsync(id);
+            var serviceResponse = await _bookingService.RemoveBookingAsync(id);
 
-            if (bookingDTO == null)
-            {
-                return NotFound(new { message = "The booking has not been found." });
-            }
-
-            return Ok(bookingDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }
 }

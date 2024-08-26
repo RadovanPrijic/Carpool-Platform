@@ -65,8 +65,6 @@ namespace CarpoolPlatformAPI.Services
         public async Task<ServiceResponse<RideDTO?>> CreateRideAsync(RideCreateDTO rideCreateDTO)
         {
             var ride = _mapper.Map<Ride>(rideCreateDTO);
-            ride.CreatedAt = DateTime.Now;
-
             var rideUser = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId);
 
             if (rideUser == null)
@@ -88,12 +86,14 @@ namespace CarpoolPlatformAPI.Services
                     "You must offer from one to four available seats.");
             }
 
+            ride.CreatedAt = DateTime.Now;
+
             rideUser.Rides.Add(ride);
             ride = await _rideRepository.CreateAsync(ride);
 
             var notification = new Notification
             {
-                Message = $"Your have successfully posted a new ride.",
+                Message = $"You have successfully posted a new ride.",
                 UserId = rideUser.Id,
                 CreatedAt = DateTime.Now
             };
@@ -102,7 +102,7 @@ namespace CarpoolPlatformAPI.Services
 
             await _notificationRepository.CreateAsync(notification);
 
-            return new ServiceResponse<RideDTO?>(HttpStatusCode.OK, _mapper.Map<RideDTO>(ride));
+            return new ServiceResponse<RideDTO?>(HttpStatusCode.Created, _mapper.Map<RideDTO>(ride));
         }
 
         public async Task<ServiceResponse<RideDTO?>> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO)
@@ -125,11 +125,15 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You can update a ride only up to three hours before it happens.");
             } 
-            else if (ride.Bookings.Count > rideUpdateDTO.SeatsAvailable)
+            else if (ride.Bookings.Sum(b => b.SeatsBooked) > rideUpdateDTO.SeatsAvailable)
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You cannot lower the number of available seats because your ride has too many accepted bookings.");
             }
+
+            ride = _mapper.Map<Ride>(rideUpdateDTO);
+            ride.UpdatedAt = DateTime.Now;
+            ride = await _rideRepository.UpdateAsync(ride);
 
             foreach (var booking in ride.Bookings)
             {
@@ -142,15 +146,12 @@ namespace CarpoolPlatformAPI.Services
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
                     };
-
                     booking.User.Notifications.Add(notification);
                     booking.User.UpdatedAt = DateTime.Now;
+
+                    await _notificationRepository.CreateAsync(notification);
                 }
             }
-
-            ride = _mapper.Map<Ride>(rideUpdateDTO);
-            ride.UpdatedAt = DateTime.Now;
-            ride = await _rideRepository.UpdateAsync(ride);
 
             return new ServiceResponse<RideDTO?>(HttpStatusCode.OK, _mapper.Map<RideDTO>(ride));
         }
@@ -192,9 +193,10 @@ namespace CarpoolPlatformAPI.Services
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
                     };
-
                     booking.User.Notifications.Add(notification);
                     booking.User.UpdatedAt = DateTime.Now;
+
+                    await _notificationRepository.CreateAsync(notification);
                 }
             }
 

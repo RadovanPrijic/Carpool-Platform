@@ -13,7 +13,7 @@ namespace CarpoolPlatformAPI.Models.Domain
         public string BookingStatus { get; set; }
 
         [Required]
-        public int SeatsBooked { get; set; } = 0;
+        public int SeatsBooked { get; set; }
 
         [Required]
         public double TotalPrice { get; set; }

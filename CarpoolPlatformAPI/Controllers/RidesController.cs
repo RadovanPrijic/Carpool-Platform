@@ -16,12 +16,10 @@ namespace CarpoolPlatformAPI.Controllers
     public class RidesController : ControllerBase
     {
         private readonly IRideService _rideService;
-        private readonly IValidationService _validationService;
 
-        public RidesController(IRideService rideService, IValidationService validationService)
+        public RidesController(IRideService rideService)
         {
             _rideService = rideService;
-            _validationService = validationService;
         }
 
         [HttpGet]
@@ -42,13 +40,7 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DeletedAt == null, 
                      includeProperties: "User, User.Picture, Bookings");
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
@@ -60,13 +52,7 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
@@ -78,15 +64,7 @@ namespace CarpoolPlatformAPI.Controllers
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                case HttpStatusCode.NotFound:
-                    return NotFound(new { message = serviceResponse.ErrorMessage });
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
@@ -95,19 +73,7 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var serviceResponse = await _rideService.CreateRideAsync(rideCreateDTO);
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.Created:
-                    return CreatedAtAction(nameof(GetRideById), new { id = serviceResponse.Data!.Id }, serviceResponse.Data);
-                case HttpStatusCode.NotFound:
-                    return NotFound(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.Unauthorized:
-                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.BadRequest:
-                    return BadRequest(new { message = serviceResponse.ErrorMessage });
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetRideById), new { id = serviceResponse.Data!.Id });
         }
 
         [HttpPut]
@@ -117,19 +83,7 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var serviceResponse = await _rideService.UpdateRideAsync(id, rideUpdateDTO);
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                case HttpStatusCode.NotFound:
-                    return NotFound(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.Unauthorized:
-                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.BadRequest:
-                    return BadRequest(new { message = serviceResponse.ErrorMessage });
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpDelete]
@@ -138,19 +92,7 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var serviceResponse = await _rideService.RemoveRideAsync(id);
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                case HttpStatusCode.NotFound:
-                    return NotFound(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.Unauthorized:
-                    return Unauthorized(new { message = serviceResponse.ErrorMessage });
-                case HttpStatusCode.BadRequest:
-                    return BadRequest(new { message = serviceResponse.ErrorMessage });
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
@@ -159,13 +101,7 @@ namespace CarpoolPlatformAPI.Controllers
         {
             var serviceResponse = await _rideService.GetAllLocationsAsync();
 
-            switch (serviceResponse.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(serviceResponse.Data);
-                default:
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
-            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }
 }
