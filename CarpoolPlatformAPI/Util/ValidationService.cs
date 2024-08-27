@@ -1,4 +1,5 @@
 ﻿using CarpoolPlatformAPI.Models.DTO.Picture;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
@@ -53,8 +54,10 @@ namespace CarpoolPlatformAPI.Util
             {
                 HttpStatusCode.OK => new OkObjectResult(serviceResponse.Data),
                 HttpStatusCode.NotFound => new NotFoundObjectResult(new { message = serviceResponse.ErrorMessage }),
-                HttpStatusCode.Unauthorized => new UnauthorizedObjectResult(new { message = serviceResponse.ErrorMessage }),
                 HttpStatusCode.BadRequest => new BadRequestObjectResult(new { message = serviceResponse.ErrorMessage }),
+                HttpStatusCode.Forbidden => new ObjectResult(new { message = serviceResponse.ErrorMessage }) { StatusCode = StatusCodes.Status403Forbidden },
+                HttpStatusCode.Unauthorized => new UnauthorizedObjectResult(new { message = serviceResponse.ErrorMessage }),
+                HttpStatusCode.NoContent => new NoContentResult(),
                 _ => new ObjectResult("An unexpected error occurred.") { StatusCode = StatusCodes.Status500InternalServerError }
             };
         }

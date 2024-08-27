@@ -23,13 +23,11 @@ namespace CarpoolPlatformAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IPictureService _pictureService;
-        private readonly IValidationService _validationService;
 
-        public UsersController(IUserService userService, IPictureService pictureService, IValidationService validationService)
+        public UsersController(IUserService userService, IPictureService pictureService)
         {
             _userService = userService;
             _pictureService = pictureService;
-            _validationService = validationService;
         }
 
         [HttpPost]
@@ -38,14 +36,9 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginRequestDTO)
         {
-            var loginResponse = await _userService.Login(loginRequestDTO);
+            var serviceResponse = await _userService.Login(loginRequestDTO);
 
-            if (string.IsNullOrEmpty(loginResponse.Token))
-            {
-                return BadRequest(new { message = "You have entered an incorrect email address or password." });
-            }
-
-            return Ok(loginResponse);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
@@ -54,38 +47,21 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO registrationRequestDTO)
         {
-            bool isUserUnique = await _userService.IsUserUnique(registrationRequestDTO.Email);
+            var serviceResponse = await _userService.Register(registrationRequestDTO);
 
-            if (!isUserUnique)
-            {
-                return BadRequest(new { message = "The entered email address already exists." });
-            }
-
-            var userDTO = await _userService.Register(registrationRequestDTO);
-
-            if (userDTO == null)
-            {
-                return BadRequest(new { message = "You have entered invalid registration data." });
-            }
-
-            return Ok(userDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
         [Route("{id}")]
         public async Task<IActionResult> GetUserById([FromRoute] string id)
         {
-            var userDTO = await _userService.GetUserAsync(
+            var serviceResponse = await _userService.GetUserAsync(
                 u => u.Id == id &&
-                u.DeletedAt == null,
-                includeProperties: "Picture, Notifications");
+                     u.DeletedAt == null,
+                     includeProperties: "Picture, Notifications");
 
-            if (userDTO == null)
-            {
-                return NotFound(new { message = "The user has not been found." });
-            }
-
-            return Ok(userDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPut]
@@ -93,33 +69,18 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] UserUpdateDTO userUpdateDTO)
         {
-            if (_validationService.GetCurrentUserId() != id)
-            {
-                return Unauthorized(new { message = "You are not authorized to update this user."});
-            }
+            var serviceResponse = await _userService.UpdateUserAsync(id, userUpdateDTO);
 
-            var userDTO = await _userService.UpdateUserAsync(id, userUpdateDTO);
-
-            if (userDTO == null)
-            {
-                return NotFound(new { message = "The user has not been found." });
-            }
-
-            return Ok(userDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
         [Route("notifications/{id}")]
         public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
         {
-            if (_validationService.GetCurrentUserId() != userId)
-            {
-                return Unauthorized(new { message = "You are not authorized to access this information." });
-            }
+            var serviceResponse = await _userService.GetAllNotificationsForUser(userId);
 
-            var notificationDTOs = await _userService.GetAllNotificationsForUser(n => n.UserId == userId);
-
-            return Ok(notificationDTOs);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
@@ -127,52 +88,18 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
         {
-            if (_validationService.GetCurrentUserId() != pictureCreateDTO.UserId)
-            {
-                return Unauthorized(new { message = "You are not authorized to upload this profile picture." });
-            }
+            var serviceResponse = await _pictureService.UploadPictureAsync(pictureCreateDTO);
 
-            var pictureDTO = await _pictureService.UploadPictureAsync(pictureCreateDTO);
-
-            if (pictureDTO == null)
-            {
-                return BadRequest(new { message = "The profile picture must be less than 10MB in size and its extension has to be one of the following: .jpg, .jpeg, .png." });
-            }
-
-            return Ok(pictureDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpDelete]
         [Route("remove-profile-picture/{id:int}")]
         public async Task<IActionResult> DeleteProfilePicture([FromRoute] int id)
         {
-            var pictureDTO = await _pictureService.RemovePictureAsync(id);
+            var serviceResponse = await _pictureService.RemovePictureAsync(id);
 
-            if (pictureDTO == null)
-            {
-                return NotFound(new { message = "The profile picture has not been found."});
-            }
-
-            return Ok("The profile picture has been successfully removed.");
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
-
-        //[HttpDelete]
-        //[Route("{id}")]
-        //public async Task<IActionResult> DeleteUser([FromRoute] string id)
-        //{
-        //    if (_validationService.GetCurrentUserId() != id)
-        //    {
-        //        return Unauthorized(new { message = "You are not authorized to delete this user." });
-        //    }
-
-        //    var userDTO = await _userService.RemoveUserAsync(id);
-
-        //    if (userDTO == null)
-        //    {
-        //        return NotFound(new { message = "The user has not been found." });
-        //    }
-
-        //    return Ok(userDTO);
-        //}
     }
 }

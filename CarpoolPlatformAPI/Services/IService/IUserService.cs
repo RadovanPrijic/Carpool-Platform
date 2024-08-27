@@ -10,15 +10,13 @@ namespace CarpoolPlatformAPI.Services.IService
 {
     public interface IUserService
     {
-        Task<bool> IsUserUnique(string email);
-        Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO);
-        Task<UserDTO?> Register(RegistrationRequestDTO registrationRequestDTO);
-        Task<List<UserDTO>> GetAllUsersAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
+        Task<ServiceResponse<LoginResponseDTO?>> Login(LoginRequestDTO loginRequestDTO);
+        Task<ServiceResponse<UserDTO?>> Register(RegistrationRequestDTO registrationRequestDTO);
+        Task<ServiceResponse<List<UserDTO>>> GetAllUsersAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 0, int pageNumber = 1, bool? notTracked = null);
-        Task<UserDTO?> GetUserAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
+        Task<ServiceResponse<UserDTO?>> GetUserAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
             bool? notTracked = null);
-        Task<UserDTO?> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
-        Task<List<NotificationDTO>> GetAllNotificationsForUser(Expression<Func<Notification, bool>> filter);
-        //Task<UserDTO?> RemoveUserAsync(string id);
+        Task<ServiceResponse<UserDTO?>> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
+        Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string userId);
     }
 }

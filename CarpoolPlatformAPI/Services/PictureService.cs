@@ -2,12 +2,15 @@
 using Azure.Core;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Picture;
+using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq.Expressions;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Services
 {
@@ -31,27 +34,51 @@ namespace CarpoolPlatformAPI.Services
             _validationService = validationService;
         }
 
-        public async Task<PictureDTO?> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
+        public async Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
         {
             var user = await _userRepository.GetAsync(
                 u => u.Id == pictureCreateDTO.UserId && 
-                u.DeletedAt == null, 
-                includeProperties: "Picture");
+                     u.DeletedAt == null, 
+                     includeProperties: "Picture");
 
-            if(!_validationService.ValidateFileUpload(pictureCreateDTO))
+            if (user == null)
             {
-                return null;
+                return new ServiceResponse<PictureDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != pictureCreateDTO.UserId)
+            {
+                return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to upload this profile picture.");
+            }
+            else if (!_validationService.ValidateFileUpload(pictureCreateDTO))
+            {
+                return new ServiceResponse<PictureDTO?>(HttpStatusCode.BadRequest,
+                    "The profile picture has to be less than 10MB in size and its file extension must be one of the following: " +
+                    ".jpg, .jpeg, .png.");
             }
 
-            var picture = new Picture
+            var picture = user.Picture ?? new Picture
             {
-                File = pictureCreateDTO.File,
-                FileExtension = Path.GetExtension(pictureCreateDTO.File.FileName),
-                FileSizeInBytes = pictureCreateDTO.File.Length,
-                FileName = Guid.NewGuid().ToString(),
-                CreatedAt = DateTime.Now,
-                UserId = pictureCreateDTO.UserId
+                UserId = pictureCreateDTO.UserId,
+                CreatedAt = DateTime.Now
             };
+
+            if (user.Picture != null)
+            {
+                picture.UpdatedAt = DateTime.Now;
+
+                var oldPictureFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
+                $"{user.Picture.FileName}{user.Picture.FileExtension}");
+
+                if (File.Exists(oldPictureFilePath))
+                {
+                    File.Delete(oldPictureFilePath);
+                }
+            }       
+
+            picture.File = pictureCreateDTO.File;
+            picture.FileExtension = Path.GetExtension(pictureCreateDTO.File.FileName);
+            picture.FileSizeInBytes = pictureCreateDTO.File.Length;
+            picture.FileName = Guid.NewGuid().ToString();
 
             var localFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
                 $"{picture.FileName}{picture.FileExtension}");
@@ -62,48 +89,49 @@ namespace CarpoolPlatformAPI.Services
             var urlFilePath = $"{_httpContextAccessor.HttpContext!.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_httpContextAccessor.HttpContext.Request.PathBase}/Pictures/{picture.FileName}{picture.FileExtension}";
             picture.FilePath = urlFilePath;
 
-            if (user!.Picture != null)
-            {
-                user.Picture.File = picture.File;
-                user.Picture.FilePath = picture.FilePath;
-                user.Picture.FileExtension = picture.FileExtension;
-                user.Picture.FileName = picture.FileName;
-                user.Picture.FileSizeInBytes = picture.FileSizeInBytes;
-                user.Picture.UpdatedAt = DateTime.Now;
-                user.UpdatedAt = DateTime.Now;
-                await _userRepository.SaveAsync();
-            }
-            else
-            {
-                user.Picture = picture;
-                user.UpdatedAt = DateTime.Now;
-                picture = await _pictureRepository.CreateAsync(picture);
-            }
+            user.Picture = picture;
+            user.UpdatedAt = DateTime.Now;
 
-            return _mapper.Map<PictureDTO>(picture);
+            picture = await _pictureRepository.CreateAsync(picture);
+
+            return new ServiceResponse<PictureDTO?>(HttpStatusCode.OK, _mapper.Map<PictureDTO>(picture));
         }
 
-        public async Task<PictureDTO?> RemovePictureAsync(int id)
+        public async Task<ServiceResponse<PictureDTO?>> RemovePictureAsync(int id)
         {
             var picture = await _pictureRepository.GetAsync(
                 p => p.Id == id && 
-                p.DeletedAt == null,
-                includeProperties: "User, User.Picture");
+                     p.DeletedAt == null,
+                     includeProperties: "User, User.Picture");
 
-            if (picture == null || picture.User.Id != _validationService.GetCurrentUserId())
+            if (picture == null)
             {
-                return null;
+                return new ServiceResponse<PictureDTO?>(HttpStatusCode.NotFound, "The profile picture has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != picture.User.Id)
+            {
+                return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this profile picture.");
             }
 
-            picture.DeletedAt = DateTime.Now;
-
             var user = picture.User;
+
+            if (user.Picture != null)
+            {
+                var oldPictureFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
+                    $"{user.Picture.FileName}{user.Picture.FileExtension}");
+                
+                if (File.Exists(oldPictureFilePath))
+                {
+                    File.Delete(oldPictureFilePath);
+                }
+            }
+
             user.Picture = null;
             user.UpdatedAt = DateTime.Now;
 
-            picture = await _pictureRepository.UpdateAsync(picture);
+            await _pictureRepository.RemoveAsync(picture);
 
-            return _mapper.Map<PictureDTO>(picture);
+            return new ServiceResponse<PictureDTO?>(HttpStatusCode.NoContent);
         }
     }
 }
