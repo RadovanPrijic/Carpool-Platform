@@ -5,6 +5,7 @@ using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
+using CarpoolPlatformAPI.Util.IValidation;
 using OfficeOpenXml;
 using System.Linq.Expressions;
 using System.Net;

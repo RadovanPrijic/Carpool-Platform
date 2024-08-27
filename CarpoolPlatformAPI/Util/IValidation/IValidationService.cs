@@ -1,6 +1,6 @@
 ﻿using CarpoolPlatformAPI.Models.DTO.Picture;
 
-namespace CarpoolPlatformAPI.Util
+namespace CarpoolPlatformAPI.Util.IValidation
 {
     public interface IValidationService
     {
