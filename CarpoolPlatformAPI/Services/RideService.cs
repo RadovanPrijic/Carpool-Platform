@@ -79,6 +79,11 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "Your ride's start location and end location have to be different.");
             }
+            else if (ride.SeatsAvailable == 4 && ride.TwoInBackseat)
+            {
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
+                    "There can be only up to three available seats in a ride if the 'two in backseat' option is enabled.");
+            }
 
             user.Rides.Add(ride);
             ride = await _rideRepository.CreateAsync(ride);
@@ -126,6 +131,11 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
                     "Your ride's start location and end location have to be different.");
+            }
+            else if (ride.SeatsAvailable == 4 && ride.TwoInBackseat)
+            {
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
+                    "There can be only up to three available seats in a ride if the 'two in backseat' option is enabled.");
             }
 
             ride = _mapper.Map<Ride>(rideUpdateDTO);
