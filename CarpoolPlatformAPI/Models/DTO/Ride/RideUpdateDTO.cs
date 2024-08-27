@@ -25,6 +25,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Ride
         public string CarInfo { get; set; }
 
         [Required(ErrorMessage = "You have not chosen the number of available seats.")]
+        [Range(1, 4, ErrorMessage = "The number of available seats must be between 1 and 4.")]
         public int SeatsAvailable { get; set; }
 
         [Required(ErrorMessage = "You have not chosen if there can be only two people in the backseat.")]

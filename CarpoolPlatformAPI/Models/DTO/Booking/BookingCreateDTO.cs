@@ -5,7 +5,8 @@ namespace CarpoolPlatformAPI.Models.DTO.Booking
     public class BookingCreateDTO
     {
         [Required(ErrorMessage = "You have not chosen the number of seats to be booked.")]
-        public int SeatsBooked { get; set; } = 0;
+        [Range(1, 4, ErrorMessage = "There can only be between 1 and 4 booked seats.")]
+        public int SeatsBooked { get; set; }
 
         [Required(ErrorMessage = "You have not provided a price total with your booking.")]
         public double TotalPrice { get; set; }

@@ -58,41 +58,39 @@ namespace CarpoolPlatformAPI.Services
         public async Task<ServiceResponse<RideDTO?>> CreateRideAsync(RideCreateDTO rideCreateDTO)
         {
             var ride = _mapper.Map<Ride>(rideCreateDTO);
-            var rideUser = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId);
+            ride.CreatedAt = DateTime.Now;
+            var user = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId);
 
-            if (rideUser == null)
+            if (user == null)
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.NotFound, "The user from the ride creation request has not been found.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             } 
             else if (_validationService.GetCurrentUserId() != ride.UserId)
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Unauthorized, "You are not authorized to create this ride.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this ride.");
             }
-            else if (rideCreateDTO.DepartureTime <= DateTime.Now.AddHours(3))
+            else if (rideCreateDTO.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
                     "You can post a ride only up to three hours before it is supposed to happen.");
             }
-            else if (rideCreateDTO.SeatsAvailable >= 1 && rideCreateDTO.SeatsAvailable <= 4)
+            else if (ride.StartLocation == ride.EndLocation)
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
-                    "You must offer from one to four available seats.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
+                    "Your ride's start location and end location have to be different.");
             }
 
-            ride.CreatedAt = DateTime.Now;
-
-            rideUser.Rides.Add(ride);
+            user.Rides.Add(ride);
             ride = await _rideRepository.CreateAsync(ride);
 
             var notification = new Notification
             {
-                Message = $"You have successfully posted a new ride.",
-                UserId = rideUser.Id,
+                Message = $"You have successfully posted a new ride, happening on {ride.DepartureTime.Date}.",
+                UserId = user.Id,
                 CreatedAt = DateTime.Now
             };
-            rideUser.Notifications.Add(notification);
-            rideUser.UpdatedAt = DateTime.Now;
-
+            user.Notifications.Add(notification);
+            user.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);
 
             return new ServiceResponse<RideDTO?>(HttpStatusCode.Created, _mapper.Map<RideDTO>(ride));
@@ -111,17 +109,23 @@ namespace CarpoolPlatformAPI.Services
             }
             else if (_validationService.GetCurrentUserId() != ride.UserId)
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Unauthorized, "You are not authorized to update this ride.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this ride.");
             }
-            else if (ride.DepartureTime.Date.AddHours(-3) > DateTime.Now)
+            else if (ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
-                    "You can update a ride only up to three hours before it happens.");
+                    "You can edit a ride only up to three hours before it happens.");
             } 
             else if (ride.Bookings.Sum(b => b.SeatsBooked) > rideUpdateDTO.SeatsAvailable)
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You cannot lower the number of available seats because your ride has too many accepted bookings.");
+            }
+            else if (ride.StartLocation == rideUpdateDTO.EndLocation || ride.EndLocation == rideUpdateDTO.StartLocation ||
+                rideUpdateDTO.StartLocation == rideUpdateDTO.EndLocation)
+            {
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
+                    "Your ride's start location and end location have to be different.");
             }
 
             ride = _mapper.Map<Ride>(rideUpdateDTO);
@@ -135,13 +139,13 @@ namespace CarpoolPlatformAPI.Services
                     var rideCreator = ride.User;
                     var notification = new Notification
                     {
-                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime}, has been updated.",
+                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime.Date}," +
+                                  $" has been updated.",
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
                     };
                     booking.User.Notifications.Add(notification);
                     booking.User.UpdatedAt = DateTime.Now;
-
                     await _notificationRepository.CreateAsync(notification);
                 }
             }
@@ -162,16 +166,19 @@ namespace CarpoolPlatformAPI.Services
             }
             else if (_validationService.GetCurrentUserId() != ride.UserId)
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Unauthorized, "You are not authorized to remove this ride.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this ride.");
             }
-            else if (ride.DepartureTime.Date > DateTime.Now)
+            else if (ride.DepartureTime < DateTime.Now.AddHours(3))
             {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, "You cannot remove a ride that has already happened.");
+                return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
+                    "You can remove a ride only up to three hours before it happens.");
             }
 
             var rideCreator = ride.User;
             rideCreator.Rides.Remove(ride);
             rideCreator.UpdatedAt = DateTime.Now;
+            ride.DeletedAt = DateTime.Now;
+            ride = await _rideRepository.UpdateAsync(ride);
 
             foreach (var booking in ride.Bookings)
             {
@@ -179,22 +186,18 @@ namespace CarpoolPlatformAPI.Services
                 {
                     booking.BookingStatus = "cancelled";
                     booking.UpdatedAt = DateTime.Now;
-
                     var notification = new Notification
                     {
-                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime}, has been cancelled.",
+                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime.Date}," +
+                                  $" has been cancelled.",
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
                     };
                     booking.User.Notifications.Add(notification);
                     booking.User.UpdatedAt = DateTime.Now;
-
                     await _notificationRepository.CreateAsync(notification);
                 }
             }
-
-            ride.DeletedAt = DateTime.Now;
-            ride = await _rideRepository.UpdateAsync(ride);
 
             return new ServiceResponse<RideDTO?>(HttpStatusCode.OK, _mapper.Map<RideDTO>(ride));
         }

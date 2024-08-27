@@ -5,6 +5,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Review
     public class ReviewUpdateDTO
     {
         [Required(ErrorMessage = "You have not chosen a rating.")]
+        [Range(1, 5, ErrorMessage = "The rating must be between 1 and 5.")]
         public int Rating { get; set; }
 
         [Required(ErrorMessage = "You have not entered a comment.")]
