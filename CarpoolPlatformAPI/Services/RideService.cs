@@ -121,7 +121,7 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You can edit a ride only up to three hours before it happens.");
             } 
-            else if (ride.Bookings.Sum(b => b.SeatsBooked) > rideUpdateDTO.SeatsAvailable)
+            else if (ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) > rideUpdateDTO.SeatsAvailable)
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You cannot lower the number of available seats because your ride has too many accepted bookings.");

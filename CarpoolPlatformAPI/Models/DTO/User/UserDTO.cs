@@ -17,8 +17,6 @@ namespace CarpoolPlatformAPI.Models.DTO.User
         public string? MusicPrefs { get; set; }
         public string? SmokingPrefs { get; set; }
         public string? PetsPrefs { get; set; }
-        public string ExperienceLevel { get; set; }
-        public string? ReliabilityLevel { get; set; }
         public DateTime CreatedAt { get; set; }
         public PictureDTO? Picture { get; set; }
         public ICollection<NotificationDTO>? Notifications { get; } = new List<NotificationDTO>();

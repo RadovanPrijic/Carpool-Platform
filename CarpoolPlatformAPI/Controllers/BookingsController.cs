@@ -60,9 +60,9 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpDelete]
         [Route("{id:int}")]
-        public async Task<IActionResult> DeleteBooking([FromRoute] int id)
+        public async Task<IActionResult> CancelBooking([FromRoute] int id)
         {
-            var serviceResponse = await _bookingService.RemoveBookingAsync(id);
+            var serviceResponse = await _bookingService.CancelBookingAsync(id);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }

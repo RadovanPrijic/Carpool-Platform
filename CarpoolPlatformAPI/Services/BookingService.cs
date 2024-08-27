@@ -54,21 +54,39 @@ namespace CarpoolPlatformAPI.Services
         public async Task<ServiceResponse<BookingDTO?>> CreateBookingAsync(BookingCreateDTO bookingCreateDTO)
         {
             var booking = _mapper.Map<Booking>(bookingCreateDTO);
+            booking.BookingStatus = "requested";
+            booking.CreatedAt = DateTime.Now;
             var user = await _userRepository.GetAsync(u => u.Id == bookingCreateDTO.UserId);
-            var ride = await _rideRepository.GetAsync(r => r.Id == bookingCreateDTO.RideId, includeProperties: "User");
+            var ride = await _rideRepository.GetAsync(r => r.Id == bookingCreateDTO.RideId, includeProperties: "User, Bookings");
 
             if (user == null)
             {
-                // TODO Throw Error("The associated user has not been found.")
-            } else if (ride == null)
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            } 
+            else if (ride == null)
             {
-                // TODO Throw Error("The associated ride has not been found.")
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The ride has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != booking.UserId)
+            {
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this booking.");
+            }
+            else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
+            {
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
+                    "You can make a booking only up to three hours before the ride.");
+            }
+            else if (ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) + booking.SeatsBooked
+                     > booking.Ride.SeatsAvailable)
+            {
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
+                    "This ride has already filled its maximum capacity.");
             }
 
-
-
-            booking.BookingStatus = "requested";
-            booking.CreatedAt = DateTime.Now;
+            if (ride.AutomaticBooking)
+            {
+                booking.BookingStatus = "accepted";
+            }
 
             user.Bookings.Add(booking);
             user.UpdatedAt = DateTime.Now;
@@ -78,20 +96,15 @@ namespace CarpoolPlatformAPI.Services
 
             booking = await _bookingRepository.CreateAsync(booking);
 
-            if (!ride.AutomaticBooking)
-            {
-
-            }
-
+            var rideCreator = ride.User;
             var notification = new Notification
             {
-                Message = $"{booking.User.FirstName} {booking.User.LastName} has requested to book your ride.",
-                UserId = ride.User.Id,
+                Message = $"{user.FirstName} {user.LastName} has requested to book your ride, happening on {ride.DepartureTime.Date}.",
+                UserId = rideCreator.Id,
                 CreatedAt = DateTime.Now
             };
-            user.Notifications.Add(notification);
-            user.UpdatedAt = DateTime.Now;
-
+            rideCreator.Notifications.Add(notification);
+            rideCreator.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);
 
             return new ServiceResponse<BookingDTO?>(HttpStatusCode.Created, _mapper.Map<BookingDTO>(booking));
@@ -105,39 +118,35 @@ namespace CarpoolPlatformAPI.Services
                      b.DeletedAt == null,
                      includeProperties: "User, Ride, Ride.User, Ride.Bookings");
 
-
             if (booking == null)
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
             else if (_validationService.GetCurrentUserId() != booking.Ride.UserId)
             {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Unauthorized, "You are not authorized to update this booking.");
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to accept or reject this booking.");
             }
             else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
                     "You can accept or reject a booking only up to three hours before the ride.");
             }
-            else if (booking.Ride.Bookings.Sum(b => b.SeatsBooked) == booking.Ride.SeatsAvailable)
+            else if ((booking.Ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) + booking.SeatsBooked
+                     > booking.Ride.SeatsAvailable) && bookingUpdateDTO.BookingStatus == "accepted")
             {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, "All seats for this ride have already been booked.");
-            }
-
-            var rideCreator = booking.Ride.User;
-
-            if (booking.BookingStatus == "accepted")
-            {
-                rideCreator.Bookings.Add(booking);
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, 
+                    "Accepting this booking would exceed the maximum number of booked seats for this ride.");
             }
 
             booking = _mapper.Map<Booking>(bookingUpdateDTO);
             booking.UpdatedAt = DateTime.Now;
             booking = await _bookingRepository.UpdateAsync(booking);
 
+            var rideCreator = booking.Ride.User;
             var notification = new Notification
             {
-                Message = $"{rideCreator.FirstName} {rideCreator.LastName} has {booking.BookingStatus} your booking.",
+                Message = $"{rideCreator.FirstName} {rideCreator.LastName} has {booking.BookingStatus} your booking for their ride," +
+                          $" happening on {booking.Ride.DepartureTime.Date}.",
                 UserId = booking.User.Id,
                 CreatedAt = DateTime.Now
             };
@@ -148,13 +157,13 @@ namespace CarpoolPlatformAPI.Services
             return new ServiceResponse<BookingDTO?>(HttpStatusCode.OK, _mapper.Map<BookingDTO>(booking));
         }
 
-        public async Task<ServiceResponse<BookingDTO?>> RemoveBookingAsync(int id)
+        public async Task<ServiceResponse<BookingDTO?>> CancelBookingAsync(int id)
         {
             var booking = await _bookingRepository.GetAsync(
                 b => b.Id == id && 
                      (b.BookingStatus == "requested" || b.BookingStatus == "accepted") &&
                      b.DeletedAt == null,
-                     includeProperties: "User, User.Bookings, Ride, Ride.User, Ride.Bookings");
+                     includeProperties: "User, Ride, Ride.User");
 
             if (booking == null)
             {
@@ -162,21 +171,14 @@ namespace CarpoolPlatformAPI.Services
             }
             else if (_validationService.GetCurrentUserId() != booking.UserId)
             {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Unauthorized, "You are not authorized to cancel this booking.");
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to cancel this booking.");
             }
-            else if (booking.BookingStatus == "accepted" && booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
+            else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, 
                     "You can cancel a booking only up to three hours before the ride.");
             }
 
-            booking.User.Bookings.Remove(booking);
-            booking.User.UpdatedAt = DateTime.Now;
-
-            booking.Ride.Bookings.Remove(booking);
-            booking.Ride.UpdatedAt = DateTime.Now;
-
-            //booking.DeletedAt = DateTime.Now;
             booking.BookingStatus = "cancelled";
             booking = await _bookingRepository.UpdateAsync(booking);
 
@@ -187,7 +189,6 @@ namespace CarpoolPlatformAPI.Services
                 UserId = rideCreator.Id,
                 CreatedAt = DateTime.Now
             };
-
             rideCreator.Notifications.Add(notification);
             rideCreator.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);

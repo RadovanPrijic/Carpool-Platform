@@ -13,6 +13,6 @@ namespace CarpoolPlatformAPI.Services.IService
             bool? notTracked = null);
         Task<ServiceResponse<BookingDTO?>> CreateBookingAsync(BookingCreateDTO bookingCreateDTO);
         Task<ServiceResponse<BookingDTO?>> UpdateBookingAsync(int id, BookingUpdateDTO bookingUpdateDTO);
-        Task<ServiceResponse<BookingDTO?>> RemoveBookingAsync(int id);
+        Task<ServiceResponse<BookingDTO?>> CancelBookingAsync(int id);
     }
 }

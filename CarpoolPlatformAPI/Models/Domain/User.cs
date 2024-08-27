@@ -29,11 +29,6 @@ namespace CarpoolPlatformAPI.Models.Domain
         public string? PetsPrefs { get; set; }
 
         [Required]
-        public string ExperienceLevel { get; set; }
-
-        public string? ReliabilityLevel { get; set; }
-
-        [Required]
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
