@@ -1,20 +1,13 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Location;
-using CarpoolPlatformAPI.Models.DTO.Review;
 using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Models.DTO.User;
-using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Drawing.Printing;
 using System.Linq.Expressions;
 using System.Net;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CarpoolPlatformAPI.Services
 {

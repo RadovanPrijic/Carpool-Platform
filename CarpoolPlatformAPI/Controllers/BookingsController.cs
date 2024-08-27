@@ -27,7 +27,6 @@ namespace CarpoolPlatformAPI.Controllers
                 b => b.UserId == userId &&
                      b.DeletedAt == null,
                      includeProperties: "Ride, Review");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -39,7 +38,6 @@ namespace CarpoolPlatformAPI.Controllers
                 b => b.Id == id &&
                      b.DeletedAt == null,
                      includeProperties: "Ride, Review");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -48,7 +46,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateBooking([FromBody] BookingCreateDTO bookingCreateDTO)
         {
             var serviceResponse = await _bookingService.CreateBookingAsync(bookingCreateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetBookingById), new { id = serviceResponse.Data!.Id });
         }
 
@@ -58,7 +55,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> UpdateBooking([FromRoute] int id, [FromBody] BookingUpdateDTO bookingUpdateDTO)
         {
             var serviceResponse = await _bookingService.UpdateBookingAsync(id, bookingUpdateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -67,7 +63,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> DeleteBooking([FromRoute] int id)
         {
             var serviceResponse = await _bookingService.RemoveBookingAsync(id);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }

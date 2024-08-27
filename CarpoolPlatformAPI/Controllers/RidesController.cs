@@ -39,7 +39,6 @@ namespace CarpoolPlatformAPI.Controllers
                      r.SeatsAvailable >= seats &&
                      r.DeletedAt == null, 
                      includeProperties: "User, User.Picture, Bookings");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -51,7 +50,6 @@ namespace CarpoolPlatformAPI.Controllers
                 r => r.UserId == userId &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -63,7 +61,6 @@ namespace CarpoolPlatformAPI.Controllers
                 r => r.Id == id &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -72,7 +69,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateRide([FromBody] RideCreateDTO rideCreateDTO)
         {
             var serviceResponse = await _rideService.CreateRideAsync(rideCreateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetRideById), new { id = serviceResponse.Data!.Id });
         }
 
@@ -82,7 +78,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> UpdateRide([FromRoute] int id, [FromBody] RideUpdateDTO rideUpdateDTO)
         {
             var serviceResponse = await _rideService.UpdateRideAsync(id, rideUpdateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -91,7 +86,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> DeleteRide([FromRoute] int id)
         {
             var serviceResponse = await _rideService.RemoveRideAsync(id);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -100,7 +94,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> GetAllLocations()
         {
             var serviceResponse = await _rideService.GetAllLocationsAsync();
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }

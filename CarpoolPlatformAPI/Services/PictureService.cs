@@ -1,15 +1,9 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Picture;
-using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Models.DTO.User;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq.Expressions;
 using System.Net;
 
 namespace CarpoolPlatformAPI.Services
@@ -114,7 +108,6 @@ namespace CarpoolPlatformAPI.Services
             }
 
             var user = picture.User;
-
             if (user.Picture != null)
             {
                 var oldPictureFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
@@ -125,10 +118,8 @@ namespace CarpoolPlatformAPI.Services
                     File.Delete(oldPictureFilePath);
                 }
             }
-
             user.Picture = null;
             user.UpdatedAt = DateTime.Now;
-
             await _pictureRepository.RemoveAsync(picture);
 
             return new ServiceResponse<PictureDTO?>(HttpStatusCode.NoContent);

@@ -18,69 +18,33 @@ namespace CarpoolPlatformAPI.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly IMessageService _messageService;
-        private readonly IValidationService _validationService;
 
-        public MessagesController(IMessageService messageService, IValidationService validationService)
+        public MessagesController(IMessageService messageService)
         {
             _messageService = messageService;
-            _validationService = validationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllConversationMessages([FromQuery] string userOne, [FromQuery] string userTwo)
         {
-            if (_validationService.GetCurrentUserId() != userOne || _validationService.GetCurrentUserId() != userTwo)
-            {
-                return Unauthorized(new { message = "You are not authorized to access this information." });
-            }
-
-            var messageDTOs = await _messageService.GetAllMessagesAsync(
-                m => (m.SenderId == userOne &&
-                m.ReceiverId == userTwo) ||
-                (m.SenderId == userTwo &&
-                m.ReceiverId == userOne));
-
-            var orderedMessageDTOs = messageDTOs.OrderBy(m => m.CreatedAt);
-
-            return Ok(orderedMessageDTOs);
+            var serviceResponse = await _messageService.GetAllConversationMessagesAsync(userOne, userTwo);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpGet]
         [Route("{id:int}")]
         public async Task<IActionResult> GetMessageById([FromRoute] int id)
         {
-            var messageDTO = await _messageService.GetMessageAsync(m => m.Id == id);
-
-            if (messageDTO == null)
-            {
-                return NotFound(new { message = "The message has not been found." });
-            }
-
-            if (_validationService.GetCurrentUserId() != messageDTO.SenderId)
-            {
-                return Unauthorized(new { message = "You are not authorized to access this information." });
-            }
-
-            return Ok(messageDTO);
+            var serviceResponse = await _messageService.GetMessageAsync(m => m.Id == id);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [ValidateModel]
         public async Task<IActionResult> CreateMessage([FromBody] MessageCreateDTO messageCreateDTO)
         {
-            if (_validationService.GetCurrentUserId() != messageCreateDTO.SenderId)
-            {
-                return Unauthorized(new { message = "You are not authorized to send this message." });
-            }
-
-            var messageDTO = await _messageService.CreateMessageAsync(messageCreateDTO);
-
-            if(messageDTO == null)
-            {
-                return BadRequest(new { message = "The provided user (sender and/or receiver) data is invalid." });
-            }    
-
-            return CreatedAtAction(nameof(GetMessageById), new { id = messageDTO.Id }, messageDTO);
+            var serviceResponse = await _messageService.CreateMessageAsync(messageCreateDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetMessageById), new { id = serviceResponse.Data!.Id });
         }
 
         [HttpPut]
@@ -88,14 +52,8 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         public async Task<IActionResult> UpdateMessage([FromRoute] int id, [FromBody] MessageUpdateDTO messageUpdateDTO)
         {
-            var messageDTO = await _messageService.UpdateMessageAsync(id, messageUpdateDTO);
-
-            if (messageDTO == null)
-            {
-                return NotFound(new { message = "The message has not been found." });
-            }
-
-            return Ok(messageDTO);
+            var serviceResponse = await _messageService.UpdateMessageAsync(id, messageUpdateDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }
 }

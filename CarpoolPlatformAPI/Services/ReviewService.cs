@@ -1,13 +1,11 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
-using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Models.DTO.Review;
-using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using System.Linq.Expressions;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Services
 {
@@ -18,70 +16,99 @@ namespace CarpoolPlatformAPI.Services
         private readonly IRideRepository _rideRepository;
         private readonly IBookingRepository _bookingRepository;
         private readonly INotificationRepository _notificationRepository;
-        private readonly IMapper _mapper;
         private readonly IValidationService _validationService;
+        private readonly IMapper _mapper;
 
         public ReviewService(IReviewRepository reviewRepository, IUserRepository userRepository, IRideRepository rideRepository,
-            IBookingRepository bookingRepository, INotificationRepository notificationRepository, IMapper mapper, 
-                IValidationService validationService)
+            IBookingRepository bookingRepository, INotificationRepository notificationRepository, IValidationService validationService, 
+                IMapper mapper)
         {
             _reviewRepository = reviewRepository;
             _userRepository = userRepository;
             _rideRepository = rideRepository;
             _bookingRepository = bookingRepository;
             _notificationRepository = notificationRepository;
-            _mapper = mapper;
             _validationService = validationService;
+            _mapper = mapper;
         }
 
-        public async Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+        public async Task<ServiceResponse<List<ReviewDTO>>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 0, int pageNumber = 1, bool? notTracked = null)
         {
             var reviews = await _reviewRepository.GetAllAsync(filter, includeProperties, pageSize, pageNumber, notTracked);
 
-            return _mapper.Map<List<ReviewDTO>>(reviews);
+            return new ServiceResponse<List<ReviewDTO>>(HttpStatusCode.OK, _mapper.Map<List<ReviewDTO>>(reviews));
         }
 
-        public async Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+        public async Task<ServiceResponse<ReviewDTO?>> GetReviewAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
             bool? notTracked = null)
         {
             var review = await _reviewRepository.GetAsync(filter, includeProperties, notTracked);
 
-            return _mapper.Map<ReviewDTO>(review);
+            if (review == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The review has not been found.");
+            }
+
+            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.OK, _mapper.Map<ReviewDTO>(review));
         }
 
-        public async Task<ReviewDTO?> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
+        public async Task<ServiceResponse<ReviewDTO?>> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO)
         {
             var review = _mapper.Map<Review>(reviewCreateDTO);
             review.CreatedAt = DateTime.Now;
-
             var reviewer = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.ReviewerId);
-            var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId);
-            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId, includeProperties: "Reviews");
+            var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId, includeProperties: "ReceivedReviews");
+            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId);
             var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId, includeProperties: "User");
 
-            if (reviewer  == null || reviewee == null || ride == null || booking == null ||
-                ride.UserId != reviewee.Id ||
-                ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null ||
-                ride.DepartureTime > DateTime.Now ||
-                booking.User.Id != reviewer.Id ||
-                booking.BookingStatus != "accepted")
+            if (_validationService.GetCurrentUserId() != reviewCreateDTO.ReviewerId)
             {
-                return null;
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this review.");
             }
-
-            reviewer.GivenReviews.Add(review);
-            reviewer.UpdatedAt = DateTime.Now;
-
-            int numberOfReviews = reviewee.ReceivedReviews.Count;
-            reviewee.Rating = (numberOfReviews * reviewee.Rating + reviewCreateDTO.Rating) / (numberOfReviews + 1);
-            reviewee.ReceivedReviews.Add(review);
+            else if (reviewer  == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The reviewer has not been found.");
+            }
+            else if (reviewee == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The reviewee has not been found.");
+            }
+            else if (ride == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The ride has not been found.");
+            }
+            else if (booking == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
+            }
+            else if (ride.UserId != reviewee.Id || ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
+                    "The provided ride not associated with the provided reviewee and/or the provided booking. ");
+            }
+            else if (booking.User.Id != reviewer.Id || booking.BookingStatus != "accepted")
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
+                    "You cannot review a ride for which you have no accepted booking.");
+            }
+            else if (ride.DepartureTime > DateTime.Now)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "Only your past rides can be reviewed.");
+            }
 
             ride.Reviews.Add(review);
             ride.UpdatedAt = DateTime.Now;
 
             booking.Review = review;
             booking.UpdatedAt = DateTime.Now;
+
+            reviewer.GivenReviews.Add(review);
+            reviewer.UpdatedAt = DateTime.Now;
+
+            int numberOfReviews = reviewee.ReceivedReviews.Count;
+            reviewee.Rating = (numberOfReviews * reviewee.Rating + review.Rating) / (numberOfReviews + 1);
+            reviewee.ReceivedReviews.Add(review);
 
             review = await _reviewRepository.CreateAsync(review);
 
@@ -91,25 +118,27 @@ namespace CarpoolPlatformAPI.Services
                 UserId = reviewee.Id,
                 CreatedAt = DateTime.Now
             };
-
             reviewee.Notifications.Add(notification);
             reviewee.UpdatedAt = DateTime.Now;
-
             await _notificationRepository.CreateAsync(notification);
 
-            return _mapper.Map<ReviewDTO>(review);
+            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Created, _mapper.Map<ReviewDTO>(review));
         }
 
-        public async Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
+        public async Task<ServiceResponse<ReviewDTO?>> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
         {
             var review = await _reviewRepository.GetAsync(
                 r => r.Id == id &&
-                r.DeletedAt == null,
-                includeProperties: "Reviewee, Reviewee.ReceivedReviews");
+                     r.DeletedAt == null,
+                     includeProperties: "Reviewee, Reviewee.ReceivedReviews");
 
-            if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
+            if (review == null)
             {
-                return null;
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The review has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != review.ReviewerId)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
             }
 
             if(reviewUpdateDTO.Rating != review.Rating)
@@ -117,40 +146,31 @@ namespace CarpoolPlatformAPI.Services
                 var reviewee = review.Reviewee;
                 var oldReview = reviewee.ReceivedReviews.FirstOrDefault(r => r.Id == review.Id);
                 int numberOfReviews = reviewee.ReceivedReviews.Count;
-
                 reviewee.Rating = ((numberOfReviews * reviewee.Rating) + (reviewUpdateDTO.Rating - oldReview!.Rating)) / numberOfReviews;
                 reviewee.UpdatedAt = DateTime.Now;
             }
-
             review = _mapper.Map<Review>(reviewUpdateDTO);
             review.UpdatedAt = DateTime.Now;
             review = await _reviewRepository.UpdateAsync(review);
 
-            return _mapper.Map<ReviewDTO>(review);
+            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.OK, _mapper.Map<ReviewDTO>(review));
         }
 
-        public async Task<ReviewDTO?> RemoveReviewAsync(int id)
+        public async Task<ServiceResponse<ReviewDTO?>> RemoveReviewAsync(int id)
         {
             var review = await _reviewRepository.GetAsync(
                 r => r.Id == id &&
-                r.DeletedAt == null,
-                includeProperties: "Reviewer, Reviewee, Ride, Booking");
+                     r.DeletedAt == null,
+                     includeProperties: "Reviewer, Reviewee, Reviewee.ReceivedReviews, Ride, Booking");
 
-            if (review == null || _validationService.GetCurrentUserId() != review.ReviewerId)
+            if (review == null)
             {
-                return null;
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The review has not been found.");
             }
-
-            var reviewer = review.Reviewer;
-            reviewer.GivenReviews.Remove(review);
-            reviewer.UpdatedAt = DateTime.Now;
-
-            var reviewee = review.Reviewee;
-            reviewee.ReceivedReviews.Remove(review);
-
-            // TODO Modify reviewee's rating
-
-            reviewee.UpdatedAt = DateTime.Now;
+            else if(_validationService.GetCurrentUserId() != review.ReviewerId)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
+            }
 
             var ride = review.Ride;
             ride.Reviews.Remove(review);
@@ -160,10 +180,20 @@ namespace CarpoolPlatformAPI.Services
             booking.Review = null;
             booking.UpdatedAt = DateTime.Now;
 
-            review.DeletedAt = DateTime.Now;
-            review = await _reviewRepository.UpdateAsync(review);
+            var reviewer = review.Reviewer;
+            reviewer.GivenReviews.Remove(review);
+            reviewer.UpdatedAt = DateTime.Now;
 
-            return _mapper.Map<ReviewDTO>(review);
+            var reviewee = review.Reviewee;
+            reviewee.ReceivedReviews.Remove(review);
+            int numberOfReviews = reviewee.ReceivedReviews.Count;
+            reviewee.Rating = (numberOfReviews * reviewee.Rating - review.Rating) / numberOfReviews;        
+            reviewee.UpdatedAt = DateTime.Now;
+
+            review.DeletedAt = DateTime.Now;
+            await _reviewRepository.UpdateAsync(review);
+
+            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NoContent);
         }
     }
 }

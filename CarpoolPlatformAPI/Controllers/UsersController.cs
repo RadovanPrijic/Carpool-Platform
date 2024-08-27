@@ -37,7 +37,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginRequestDTO)
         {
             var serviceResponse = await _userService.Login(loginRequestDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -48,7 +47,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO registrationRequestDTO)
         {
             var serviceResponse = await _userService.Register(registrationRequestDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -60,7 +58,6 @@ namespace CarpoolPlatformAPI.Controllers
                 u => u.Id == id &&
                      u.DeletedAt == null,
                      includeProperties: "Picture, Notifications");
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -70,7 +67,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] UserUpdateDTO userUpdateDTO)
         {
             var serviceResponse = await _userService.UpdateUserAsync(id, userUpdateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -79,7 +75,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
         {
             var serviceResponse = await _userService.GetAllNotificationsForUser(userId);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -89,7 +84,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
         {
             var serviceResponse = await _pictureService.UploadPictureAsync(pictureCreateDTO);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -98,7 +92,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> DeleteProfilePicture([FromRoute] int id)
         {
             var serviceResponse = await _pictureService.RemovePictureAsync(id);
-
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }

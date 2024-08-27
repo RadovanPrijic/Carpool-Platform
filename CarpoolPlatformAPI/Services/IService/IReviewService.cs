@@ -1,17 +1,18 @@
 ﻿using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Review;
+using CarpoolPlatformAPI.Util;
 using System.Linq.Expressions;
 
 namespace CarpoolPlatformAPI.Services.IService
 {
     public interface IReviewService
     {
-        Task<List<ReviewDTO>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+        Task<ServiceResponse<List<ReviewDTO>>> GetAllReviewsAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
             int pageSize = 0, int pageNumber = 1, bool? notTracked = null);
-        Task<ReviewDTO?> GetReviewAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
+        Task<ServiceResponse<ReviewDTO?>> GetReviewAsync(Expression<Func<Review, bool>>? filter = null, string? includeProperties = null,
             bool? notTracked = null);
-        Task<ReviewDTO?> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO);
-        Task<ReviewDTO?> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO);
-        Task<ReviewDTO?> RemoveReviewAsync(int id);
+        Task<ServiceResponse<ReviewDTO?>> CreateReviewAsync(ReviewCreateDTO reviewCreateDTO);
+        Task<ServiceResponse<ReviewDTO?>> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO);
+        Task<ServiceResponse<ReviewDTO?>> RemoveReviewAsync(int id);
     }
 }
