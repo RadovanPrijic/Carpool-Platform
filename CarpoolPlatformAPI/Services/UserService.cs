@@ -10,7 +10,9 @@ using CarpoolPlatformAPI.Util;
 using CarpoolPlatformAPI.Util.Email;
 using CarpoolPlatformAPI.Util.IValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Net;
@@ -28,6 +30,9 @@ namespace CarpoolPlatformAPI.Services
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private string _secretKey;
+        private string _emailConfirmationEndpoint;
+        private string _emailChangeEndpoint;
+        private string _passwordResetEndpoint;
 
         public UserService(IUserRepository userRepository, INotificationRepository notificationRepository, IValidationService validationService,
             IEmailService emailService, IMapper mapper, UserManager<User> userManager, IConfiguration configuration)
@@ -39,6 +44,9 @@ namespace CarpoolPlatformAPI.Services
             _mapper = mapper;
             _userManager = userManager;
             _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;
+            _emailConfirmationEndpoint = configuration.GetValue<string>("Endpoints:EmailConfirmationEndpoint")!;
+            _emailChangeEndpoint = configuration.GetValue<string>("Endpoints:EmailChangeEndpoint")!;
+            _passwordResetEndpoint = configuration.GetValue<string>("Endpoints:PasswordResetEndpoint")!;
         }
 
         public async Task<ServiceResponse<LoginResponseDTO?>> Login(LoginRequestDTO loginRequestDTO)
@@ -69,7 +77,8 @@ namespace CarpoolPlatformAPI.Services
                     var token = tokenHandler.CreateToken(tokenDescriptor);
                     LoginResponseDTO loginResponseDTO = new LoginResponseDTO()
                     {
-                        Token = tokenHandler.WriteToken(token)
+                        Token = tokenHandler.WriteToken(token),
+                        EmailConfirmed = user.EmailConfirmed
                     };
 
                     return new ServiceResponse<LoginResponseDTO?>(HttpStatusCode.OK, loginResponseDTO);
@@ -94,6 +103,7 @@ namespace CarpoolPlatformAPI.Services
             {
                 Email = registrationRequestDTO.Email,
                 NormalizedEmail = registrationRequestDTO.Email.ToUpper(),
+                EmailConfirmed = false,
                 UserName = registrationRequestDTO.Email,
                 CreatedAt = DateTime.Now
             };
@@ -106,6 +116,12 @@ namespace CarpoolPlatformAPI.Services
                 {
                     await _userManager.AddToRoleAsync(user, "Basic_User");
                     var userToReturn = await _userRepository.GetAsync(u => u.Email == registrationRequestDTO.Email);
+
+                    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var subject = "Email confirmation";
+                    var body = $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}&confirmationToken={confirmationToken}'>" +
+                        $"here</a> to confirm your email address.</p>";
+                    await _emailService.SendEmailAsync(user.Email!, subject, body);
 
                     var notification = new Notification
                     {
@@ -170,17 +186,135 @@ namespace CarpoolPlatformAPI.Services
             return new ServiceResponse<UserDTO?>(HttpStatusCode.OK, _mapper.Map<UserDTO>(user));
         }
 
-        public async Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string userId)
+        public async Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string id)
         {
-            if (_validationService.GetCurrentUserId() != userId)
+            if (_validationService.GetCurrentUserId() != id)
             {
                 return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
             }
 
-            var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == userId);
+            var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == id);
 
             return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.OK, 
                 _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt)));
+        }
+
+        public async Task<ServiceResponse<UserDTO?>> initiateEmailConfirmationAsync(string id)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != id)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            }
+            else if (user.EmailConfirmed)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "Your email address has already been confirmed.");
+            }
+
+            var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var subject = "Email confirmation";
+            var body = $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}&confirmationToken={confirmationToken}'>" +
+                $"here</a> to confirm your email address.</p>";
+            await _emailService.SendEmailAsync(user.Email!, subject, body);
+
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
+        }
+
+        public async Task<ServiceResponse<UserDTO?>> initiateEmailChangeAsync(string id, EmailDTO emailDTO)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != id)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            }
+
+            var changeToken = await _userManager.GenerateChangeEmailTokenAsync(user, emailDTO.NewEmail);
+            var subject = "Email change";
+            var body = 
+                $"<p>Click <a href='{_emailChangeEndpoint}?userId={user.Id}&newEmail={emailDTO.NewEmail}&changeToken={changeToken}'>" +
+                $"here</a> to change your email address.</p>";
+            await _emailService.SendEmailAsync(user.Email!, subject, body);
+
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
+        }
+
+        public async Task<ServiceResponse<UserDTO?>> confirmEmailAsync(string id, string token, bool emailChange,
+            string? newEmail)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+            else if (_validationService.GetCurrentUserId() != id)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            }
+            else if (!emailChange && user.EmailConfirmed)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "Your email address has already been confirmed.");
+            }
+
+            IdentityResult result = emailChange 
+                ? await _userManager.ChangeEmailAsync(user, newEmail!, token)
+                : await _userManager.ConfirmEmailAsync(user, token);
+
+            if (result.Succeeded)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent, 
+                    $"Your email address has been successfully {(emailChange ? "changed" : "confirmed")}.");
+            }
+
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error occurred.");
+        }
+
+        public async Task<ServiceResponse<UserDTO?>> initiatePasswordResetAsync(string email)
+        {
+            var user = await _userRepository.GetAsync(u => u.Email == email && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var subject = "Password reset";
+            var body =
+                $"<p>Click <a href='{_passwordResetEndpoint}?userEmail={email}&resetToken={resetToken}'> here</a> " +
+                $"to reset your password.</p>";
+            await _emailService.SendEmailAsync(user.Email!, subject, body);
+
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
+        }
+
+        public async Task<ServiceResponse<UserDTO?>> resetPasswordAsync(string email, string resetToken, PasswordDTO passwordDTO)
+        {
+            var user = await _userRepository.GetAsync(u => u.Email == email && u.DeletedAt == null);
+
+            if (user == null)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+
+            IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, passwordDTO.NewPassword);
+
+            if (result.Succeeded)
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
+            }
+
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error occurred.");
         }
     }
 }

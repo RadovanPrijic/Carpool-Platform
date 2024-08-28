@@ -17,6 +17,11 @@ namespace CarpoolPlatformAPI.Services.IService
         Task<ServiceResponse<UserDTO?>> GetUserAsync(Expression<Func<User, bool>>? filter = null, string? includeProperties = null,
             bool? notTracked = null);
         Task<ServiceResponse<UserDTO?>> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
-        Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string userId);
+        Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string id);
+        Task<ServiceResponse<UserDTO?>> initiateEmailConfirmationAsync(string id);
+        Task<ServiceResponse<UserDTO?>> initiateEmailChangeAsync(string id, EmailDTO emailDTO);
+        Task<ServiceResponse<UserDTO?>> confirmEmailAsync(string id, string token, bool emailChange, string? newEmail);
+        Task<ServiceResponse<UserDTO?>> initiatePasswordResetAsync(string email);
+        Task<ServiceResponse<UserDTO?>> resetPasswordAsync(string email, string resetToken, PasswordDTO passwordDTO);
     }
 }

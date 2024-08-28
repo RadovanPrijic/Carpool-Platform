@@ -94,5 +94,54 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _pictureService.RemovePictureAsync(id);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
+
+        [HttpPost]
+        [Route("initiate-email-confirmation/{id}")]
+        public async Task<IActionResult> initiateEmailConfirmationAsync([FromRoute] string id)
+        {
+            var serviceResponse = await _userService.initiateEmailConfirmationAsync(id);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpPost]
+        [Route("initiate-email-change/{id}")]
+        [ValidateModel]
+        public async Task<IActionResult> initiateEmailChangeAsync([FromRoute] string id, [FromBody] EmailDTO emailDTO)
+        {
+            var serviceResponse = await _userService.initiateEmailChangeAsync(id, emailDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpPost]
+        [Route("confirm-email")]
+        public async Task<IActionResult> confirmEmailAsync(
+            [FromQuery] string id, 
+            [FromQuery] string confirmationToken, 
+            [FromQuery] bool emailChange, 
+            [FromQuery] string? newEmail)
+        {
+            var serviceResponse = await _userService.confirmEmailAsync(id, confirmationToken, emailChange, newEmail);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpPost]
+        [Route("initiate-password-reset/{email}")]
+        public async Task<IActionResult> initiatePasswordResetAsync([FromRoute] string email)
+        {
+            var serviceResponse = await _userService.initiatePasswordResetAsync(email);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpPost]
+        [Route("reset-password")]
+        [ValidateModel]
+        public async Task<IActionResult> resetPasswordAsync(
+            [FromQuery] string email, 
+            [FromQuery] string resetToken, 
+            [FromBody] PasswordDTO passwordDTO)
+        {
+            var serviceResponse = await _userService.resetPasswordAsync(email, resetToken, passwordDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
     }
 }
