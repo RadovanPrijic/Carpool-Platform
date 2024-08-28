@@ -1,17 +1,14 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Auth;
-using CarpoolPlatformAPI.Models.DTO.Booking;
 using CarpoolPlatformAPI.Models.DTO.Login;
 using CarpoolPlatformAPI.Models.DTO.Notification;
-using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Models.DTO.User;
-using CarpoolPlatformAPI.Repositories;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
+using CarpoolPlatformAPI.Util.Email;
 using CarpoolPlatformAPI.Util.IValidation;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -27,16 +24,18 @@ namespace CarpoolPlatformAPI.Services
         private readonly IUserRepository _userRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IValidationService _validationService;
+        private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private string _secretKey;
 
         public UserService(IUserRepository userRepository, INotificationRepository notificationRepository, IValidationService validationService,
-            IMapper mapper, UserManager<User> userManager, IConfiguration configuration)
+            IEmailService emailService, IMapper mapper, UserManager<User> userManager, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
             _validationService = validationService;
+            _emailService = emailService;
             _mapper = mapper;
             _userManager = userManager;
             _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;

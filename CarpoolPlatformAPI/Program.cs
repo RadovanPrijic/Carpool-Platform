@@ -6,10 +6,12 @@ using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
+using CarpoolPlatformAPI.Util.Email;
 using CarpoolPlatformAPI.Util.IValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -52,10 +54,13 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IPictureService, PictureService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Validation services
 builder.Services.AddScoped<IValidationService, ValidationService>();
 
 builder.Services.AddAutoMapper(typeof(MappingConfiguration));
-
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 var key = builder.Configuration.GetValue<string>("Jwt:SecretKey");
 
 builder.Services.AddAuthentication(x =>
