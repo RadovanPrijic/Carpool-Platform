@@ -66,8 +66,8 @@ namespace CarpoolPlatformAPI.Services
         {
             var message = _mapper.Map<Message>(messageCreateDTO);
             message.CreatedAt = DateTime.Now;
-            var sender = await _userRepository.GetAsync(u => u.Id == messageCreateDTO.SenderId);
-            var receiver = await _userRepository.GetAsync(u => u.Id == messageCreateDTO.ReceiverId);
+            var sender = await _userRepository.GetAsync(u => u.Id == messageCreateDTO.SenderId && u.DeletedAt == null);
+            var receiver = await _userRepository.GetAsync(u => u.Id == messageCreateDTO.ReceiverId && u.DeletedAt == null);
 
             if (sender  == null)
             {

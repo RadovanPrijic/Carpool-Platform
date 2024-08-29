@@ -58,10 +58,12 @@ namespace CarpoolPlatformAPI.Services
         {
             var review = _mapper.Map<Review>(reviewCreateDTO);
             review.CreatedAt = DateTime.Now;
-            var reviewer = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.ReviewerId);
-            var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId, includeProperties: "ReceivedReviews");
-            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId);
-            var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId, includeProperties: "User");
+            var reviewer = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.ReviewerId && u.DeletedAt == null);
+            var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId && u.DeletedAt == null,
+                includeProperties: "ReceivedReviews");
+            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId && r.DeletedAt == null);
+            var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId && b.DeletedAt == null ,
+                includeProperties: "User");
 
             if (_validationService.GetCurrentUserId() != reviewCreateDTO.ReviewerId)
             {

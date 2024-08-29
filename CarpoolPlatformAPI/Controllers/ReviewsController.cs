@@ -49,7 +49,8 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> GetReviewById([FromRoute] int id)
         {
             var serviceResponse = await _reviewService.GetReviewAsync(
-                r => r.Id == id,
+                r => r.Id == id &&
+                     r.DeletedAt == null,
                      includeProperties: "User, User.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }

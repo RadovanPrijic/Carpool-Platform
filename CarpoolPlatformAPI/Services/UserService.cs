@@ -92,7 +92,7 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task<ServiceResponse<UserDTO?>> Register(RegistrationRequestDTO registrationRequestDTO)
         {
-            var user = await _userRepository.GetAsync(u => u.Email == registrationRequestDTO.Email);
+            var user = await _userRepository.GetAsync(u => u.Email == registrationRequestDTO.Email && u.DeletedAt == null);
 
             if (user != null)
             {
@@ -193,7 +193,7 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
             }
 
-            var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == id);
+            var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == id && n.DeletedAt == null);
 
             return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.OK, 
                 _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt)));

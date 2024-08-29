@@ -60,7 +60,7 @@ namespace CarpoolPlatformAPI.Services
         {
             var ride = _mapper.Map<Ride>(rideCreateDTO);
             ride.CreatedAt = DateTime.Now;
-            var user = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId);
+            var user = await _userRepository.GetAsync(u => u.Id == rideCreateDTO.UserId && u.DeletedAt == null);
 
             if (user == null)
             {

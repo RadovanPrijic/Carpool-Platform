@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Booking;
-using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Repositories.IRepository;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
@@ -57,8 +56,9 @@ namespace CarpoolPlatformAPI.Services
             var booking = _mapper.Map<Booking>(bookingCreateDTO);
             booking.BookingStatus = "requested";
             booking.CreatedAt = DateTime.Now;
-            var user = await _userRepository.GetAsync(u => u.Id == bookingCreateDTO.UserId);
-            var ride = await _rideRepository.GetAsync(r => r.Id == bookingCreateDTO.RideId, includeProperties: "User, Bookings");
+            var user = await _userRepository.GetAsync(u => u.Id == bookingCreateDTO.UserId && u.DeletedAt == null);
+            var ride = await _rideRepository.GetAsync(r => r.Id == bookingCreateDTO.RideId && r.DeletedAt == null,
+                includeProperties: "User, Bookings");
 
             if (user == null)
             {
