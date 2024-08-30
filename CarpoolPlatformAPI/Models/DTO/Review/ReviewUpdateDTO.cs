@@ -10,6 +10,6 @@ namespace CarpoolPlatformAPI.Models.DTO.Review
 
         [Required(ErrorMessage = "You have not entered a comment.")]
         [StringLength(1000, ErrorMessage = "The review comment should be up to 1000 characters long.")]
-        public string Comment { get; set; }
+        public string Comment { get; set; } = null!;
     }
 }

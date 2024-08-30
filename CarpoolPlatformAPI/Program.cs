@@ -54,15 +54,14 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IPictureService, PictureService>();
+
+// Utility services
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-// Validation services
 builder.Services.AddScoped<IValidationService, ValidationService>();
-
-builder.Services.AddAutoMapper(typeof(MappingConfiguration));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-var key = builder.Configuration.GetValue<string>("Jwt:SecretKey");
+builder.Services.AddAutoMapper(typeof(MappingConfiguration));
 
+var key = builder.Configuration.GetValue<string>("Jwt:SecretKey");
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -74,7 +73,7 @@ builder.Services.AddAuthentication(x =>
         x.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!)),
             ValidateIssuer = false,
             ValidateAudience = false
         };

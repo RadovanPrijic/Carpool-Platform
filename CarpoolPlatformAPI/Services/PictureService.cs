@@ -18,15 +18,15 @@ namespace CarpoolPlatformAPI.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IValidationService _validationService;
 
-        public PictureService(IPictureRepository pictureRepository, IUserRepository userRepository, IMapper mapper, 
-            IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IValidationService validationService)
+        public PictureService(IPictureRepository pictureRepository, IUserRepository userRepository, IValidationService validationService, 
+            IMapper mapper, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
             _pictureRepository = pictureRepository;
             _userRepository = userRepository;
+            _validationService = validationService;
             _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
             _httpContextAccessor = httpContextAccessor;
-            _validationService = validationService;
         }
 
         public async Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
@@ -62,7 +62,7 @@ namespace CarpoolPlatformAPI.Services
                 picture.UpdatedAt = DateTime.Now;
 
                 var oldPictureFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",
-                $"{user.Picture.FileName}{user.Picture.FileExtension}");
+                    $"{user.Picture.FileName}{user.Picture.FileExtension}");
 
                 if (File.Exists(oldPictureFilePath))
                 {
@@ -81,12 +81,12 @@ namespace CarpoolPlatformAPI.Services
             using var stream = new FileStream(localFilePath, FileMode.Create);
             await picture.File.CopyToAsync(stream);
 
-            var urlFilePath = $"{_httpContextAccessor.HttpContext!.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_httpContextAccessor.HttpContext.Request.PathBase}/Pictures/{picture.FileName}{picture.FileExtension}";
+            var urlFilePath = $"{_httpContextAccessor.HttpContext!.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}" +
+                $"{_httpContextAccessor.HttpContext.Request.PathBase}/Pictures/{picture.FileName}{picture.FileExtension}";
             picture.FilePath = urlFilePath;
 
             user.Picture = picture;
             user.UpdatedAt = DateTime.Now;
-
             picture = await _pictureRepository.CreateAsync(picture);
 
             return new ServiceResponse<PictureDTO?>(HttpStatusCode.OK, _mapper.Map<PictureDTO>(picture));

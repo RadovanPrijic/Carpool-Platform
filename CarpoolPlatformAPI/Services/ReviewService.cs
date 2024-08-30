@@ -133,7 +133,7 @@ namespace CarpoolPlatformAPI.Services
             var review = await _reviewRepository.GetAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewee, Reviewee.ReceivedReviews");
+                     includeProperties: "Reviewer, Reviewee, Reviewee.ReceivedReviews");
 
             if (review == null)
             {
@@ -144,17 +144,27 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
             }
 
-            if(reviewUpdateDTO.Rating != review.Rating)
+            var reviewer = review.Reviewer;
+            var reviewee = review.Reviewee;
+
+            if (reviewUpdateDTO.Rating != review.Rating)
             {
-                var reviewee = review.Reviewee;
-                var oldReview = reviewee.ReceivedReviews.FirstOrDefault(r => r.Id == review.Id);
                 int numberOfReviews = reviewee.ReceivedReviews.Count;
-                reviewee.Rating = ((numberOfReviews * reviewee.Rating) + (reviewUpdateDTO.Rating - oldReview!.Rating)) / numberOfReviews;
-                reviewee.UpdatedAt = DateTime.Now;
+                reviewee.Rating = ((numberOfReviews * reviewee.Rating) + (reviewUpdateDTO.Rating - review.Rating)) / numberOfReviews;
             }
             review = _mapper.Map<Review>(reviewUpdateDTO);
             review.UpdatedAt = DateTime.Now;
             review = await _reviewRepository.UpdateAsync(review);
+
+            var notification = new Notification
+            {
+                Message = $"The review for your ride by {reviewer.FirstName} ${reviewer.LastName} has just been updated.",
+                UserId = reviewee.Id,
+                CreatedAt = DateTime.Now
+            };
+            reviewee.Notifications.Add(notification);
+            reviewee.UpdatedAt = DateTime.Now;
+            await _notificationRepository.CreateAsync(notification);
 
             return new ServiceResponse<ReviewDTO?>(HttpStatusCode.OK, _mapper.Map<ReviewDTO>(review));
         }
@@ -188,9 +198,10 @@ namespace CarpoolPlatformAPI.Services
             reviewer.UpdatedAt = DateTime.Now;
 
             var reviewee = review.Reviewee;
-            reviewee.ReceivedReviews.Remove(review);
+            reviewee.ReceivedReviews.Remove(review);          
+            int ratingSum = reviewee.ReceivedReviews.Sum(r => r.Rating);
             int numberOfReviews = reviewee.ReceivedReviews.Count;
-            reviewee.Rating = (numberOfReviews * reviewee.Rating - review.Rating) / numberOfReviews;        
+            reviewee.Rating = ratingSum / numberOfReviews;
             reviewee.UpdatedAt = DateTime.Now;
 
             review.DeletedAt = DateTime.Now;

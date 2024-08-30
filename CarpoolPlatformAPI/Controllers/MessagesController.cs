@@ -1,14 +1,9 @@
 ﻿using CarpoolPlatformAPI.CustomActionFilters;
-using CarpoolPlatformAPI.Models.Domain;
-using CarpoolPlatformAPI.Models.DTO.Booking;
 using CarpoolPlatformAPI.Models.DTO.Message;
-using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 
 namespace CarpoolPlatformAPI.Controllers
 {

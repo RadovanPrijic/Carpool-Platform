@@ -21,10 +21,10 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("all/{id}")]
-        public async Task<IActionResult> GetAllBookingsForUser([FromRoute] string userId)
+        public async Task<IActionResult> GetAllBookingsForUser([FromRoute] string id)
         {
             var serviceResponse = await _bookingService.GetAllBookingsAsync(
-                b => b.UserId == userId &&
+                b => b.UserId == id &&
                      b.DeletedAt == null,
                      includeProperties: "Ride, Review");
             return ValidationService.HandleServiceResponse(serviceResponse);

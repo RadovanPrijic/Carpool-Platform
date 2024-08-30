@@ -1,8 +1,5 @@
 ﻿using CarpoolPlatformAPI.CustomActionFilters;
-using CarpoolPlatformAPI.Models.DTO.Message;
 using CarpoolPlatformAPI.Models.DTO.Review;
-using CarpoolPlatformAPI.Models.DTO.Ride;
-using CarpoolPlatformAPI.Services;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
@@ -24,10 +21,10 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("received/{id}")]
-        public async Task<IActionResult> GetAllReceivedReviewsForUser([FromRoute] string userId)
+        public async Task<IActionResult> GetAllReceivedReviewsForUser([FromRoute] string id)
         {
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
-                r => r.RevieweeId == userId &&
+                r => r.RevieweeId == id &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);
@@ -35,10 +32,10 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("given/{id}")]
-        public async Task<IActionResult> GetAllGivenReviewsForUser([FromRoute] string userId)
+        public async Task<IActionResult> GetAllGivenReviewsForUser([FromRoute] string id)
         {
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
-                r => r.ReviewerId == userId &&
+                r => r.ReviewerId == id &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);

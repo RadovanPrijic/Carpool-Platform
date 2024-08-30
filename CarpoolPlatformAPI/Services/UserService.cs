@@ -9,10 +9,9 @@ using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using CarpoolPlatformAPI.Util.Email;
 using CarpoolPlatformAPI.Util.IValidation;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
 using System.Net;
@@ -51,7 +50,7 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task<ServiceResponse<LoginResponseDTO?>> Login(LoginRequestDTO loginRequestDTO)
         {
-            var user = await _userManager.FindByEmailAsync(loginRequestDTO.Email);
+            var user = await _userRepository.GetAsync(u => u.Email == loginRequestDTO.Email && u.DeletedAt == null);
 
             if (user != null)
             {
@@ -64,18 +63,18 @@ namespace CarpoolPlatformAPI.Services
                     var key = Encoding.UTF8.GetBytes(_secretKey);
                     var tokenDescriptor = new SecurityTokenDescriptor
                     {
-                        Subject = new ClaimsIdentity(new Claim[]
-                        {
+                        Subject = new ClaimsIdentity(
+                        [
                             new Claim(ClaimTypes.NameIdentifier, user.Id),
                             new Claim(ClaimTypes.Email, user.Email!),
                             new Claim(ClaimTypes.Role, roles.FirstOrDefault()!)
-                        }),
+                        ]),
                         Expires = DateTime.UtcNow.AddHours(4),
                         SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                     };
 
                     var token = tokenHandler.CreateToken(tokenDescriptor);
-                    LoginResponseDTO loginResponseDTO = new LoginResponseDTO()
+                    LoginResponseDTO loginResponseDTO = new()
                     {
                         Token = tokenHandler.WriteToken(token),
                         EmailConfirmed = user.EmailConfirmed
@@ -96,17 +95,14 @@ namespace CarpoolPlatformAPI.Services
 
             if (user != null)
             {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "The entered email address already exists.");
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "The entered email address already exists in the database.");
             }
 
-            user = new()
-            {
-                Email = registrationRequestDTO.Email,
-                NormalizedEmail = registrationRequestDTO.Email.ToUpper(),
-                EmailConfirmed = false,
-                UserName = registrationRequestDTO.Email,
-                CreatedAt = DateTime.Now
-            };
+            user = _mapper.Map<User>(registrationRequestDTO);
+            user.NormalizedEmail = registrationRequestDTO.Email.ToUpper();
+            user.UserName = registrationRequestDTO.Email;
+            user.EmailConfirmed = false;
+            user.CreatedAt = DateTime.Now;
 
             try
             {
@@ -140,7 +136,7 @@ namespace CarpoolPlatformAPI.Services
                 Console.WriteLine(e.StackTrace);
             }
 
-            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error occured.");
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error has occured.");
         }
 
         public async Task<ServiceResponse<List<UserDTO>>> GetAllUsersAsync(Expression<Func<User, bool>>? filter, string? includeProperties,
@@ -166,9 +162,7 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task<ServiceResponse<UserDTO?>> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO)
         {
-            var user = await _userRepository.GetAsync(
-                u => u.Id == id &&
-                u.DeletedAt == null);
+            var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
             if (user == null)
             {
@@ -199,7 +193,7 @@ namespace CarpoolPlatformAPI.Services
                 _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt)));
         }
 
-        public async Task<ServiceResponse<UserDTO?>> initiateEmailConfirmationAsync(string id)
+        public async Task<ServiceResponse<UserDTO?>> InitiateEmailConfirmationAsync(string id)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
@@ -225,7 +219,7 @@ namespace CarpoolPlatformAPI.Services
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
         }
 
-        public async Task<ServiceResponse<UserDTO?>> initiateEmailChangeAsync(string id, EmailDTO emailDTO)
+        public async Task<ServiceResponse<UserDTO?>> InitiateEmailChangeAsync(string id, EmailDTO emailDTO)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
 
@@ -241,14 +235,14 @@ namespace CarpoolPlatformAPI.Services
             var changeToken = await _userManager.GenerateChangeEmailTokenAsync(user, emailDTO.NewEmail);
             var subject = "Email change";
             var body = 
-                $"<p>Click <a href='{_emailChangeEndpoint}?userId={user.Id}&newEmail={emailDTO.NewEmail}&changeToken={changeToken}'>" +
+                $"<p>Click <a href='{_emailChangeEndpoint}?userId={user.Id}&changeToken={changeToken}&newEmail={emailDTO.NewEmail}'>" +
                 $"here</a> to change your email address.</p>";
             await _emailService.SendEmailAsync(user.Email!, subject, body);
 
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
         }
 
-        public async Task<ServiceResponse<UserDTO?>> confirmEmailAsync(string id, string token, bool emailChange,
+        public async Task<ServiceResponse<UserDTO?>> ConfirmEmailAsync(string id, string token, bool emailChange,
             string? newEmail)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);
@@ -276,10 +270,10 @@ namespace CarpoolPlatformAPI.Services
                     $"Your email address has been successfully {(emailChange ? "changed" : "confirmed")}.");
             }
 
-            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error occurred.");
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error has occurred.");
         }
 
-        public async Task<ServiceResponse<UserDTO?>> initiatePasswordResetAsync(string email)
+        public async Task<ServiceResponse<UserDTO?>>InitiatePasswordResetAsync(string email)
         {
             var user = await _userRepository.GetAsync(u => u.Email == email && u.DeletedAt == null);
 
@@ -298,7 +292,7 @@ namespace CarpoolPlatformAPI.Services
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
         }
 
-        public async Task<ServiceResponse<UserDTO?>> resetPasswordAsync(string email, string resetToken, PasswordDTO passwordDTO)
+        public async Task<ServiceResponse<UserDTO?>> ResetPasswordAsync(string email, string resetToken, PasswordDTO passwordDTO)
         {
             var user = await _userRepository.GetAsync(u => u.Email == email && u.DeletedAt == null);
 
@@ -314,7 +308,7 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
             }
 
-            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error occurred.");
+            return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error has occurred.");
         }
     }
 }

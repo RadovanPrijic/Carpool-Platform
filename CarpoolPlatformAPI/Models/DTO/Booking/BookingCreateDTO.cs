@@ -12,7 +12,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Booking
         public double TotalPrice { get; set; }
 
         [Required(ErrorMessage = "You have not provided a user ID with your booking.")]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not provided a ride ID with your booking.")]
         public int RideId { get; set; }

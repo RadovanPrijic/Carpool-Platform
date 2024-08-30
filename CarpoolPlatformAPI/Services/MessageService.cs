@@ -39,7 +39,7 @@ namespace CarpoolPlatformAPI.Services
             var messages = await _messageRepository.GetAllAsync(
                 m => (m.SenderId == userOneId && m.ReceiverId == userTwoId) ||
                      (m.SenderId == userTwoId && m.ReceiverId == userOneId),
-                     includeProperties, 2000, 1, notTracked);
+                     includeProperties, 2500, 1, notTracked);
 
             return new ServiceResponse<List<MessageDTO>>(HttpStatusCode.OK, _mapper.Map<List<MessageDTO>>(messages));
         }
@@ -56,7 +56,7 @@ namespace CarpoolPlatformAPI.Services
             else if (_validationService.GetCurrentUserId() != message.SenderId || 
                      _validationService.GetCurrentUserId() != message.ReceiverId)
             {
-                return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "The are not allowed to access this information.");
+                return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
             }
 
             return new ServiceResponse<MessageDTO?>(HttpStatusCode.OK, _mapper.Map<MessageDTO>(message));

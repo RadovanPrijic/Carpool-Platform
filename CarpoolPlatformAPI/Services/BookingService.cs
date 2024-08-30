@@ -100,7 +100,11 @@ namespace CarpoolPlatformAPI.Services
             var rideCreator = ride.User;
             var notification = new Notification
             {
-                Message = $"{user.FirstName} {user.LastName} has requested to book your ride, happening on {ride.DepartureTime.Date}.",
+                Message = 
+                    $"{( !ride.AutomaticBooking ? 
+                    $"{user.FirstName} {user.LastName} has requested to book your ride," :
+                    $"{user.FirstName} {user.LastName} has booked your ride," )}" +
+                    $" happening on {ride.DepartureTime.Date}, at {ride.DepartureTime.Hour}:{ride.DepartureTime.Minute}.",
                 UserId = rideCreator.Id,
                 CreatedAt = DateTime.Now
             };
@@ -144,10 +148,11 @@ namespace CarpoolPlatformAPI.Services
             booking = await _bookingRepository.UpdateAsync(booking);
 
             var rideCreator = booking.Ride.User;
+            var rideDateTime = booking.Ride.DepartureTime;
             var notification = new Notification
             {
                 Message = $"{rideCreator.FirstName} {rideCreator.LastName} has {booking.BookingStatus} your booking for their ride," +
-                          $" happening on {booking.Ride.DepartureTime.Date}.",
+                          $" happening on {rideDateTime.Date}, at {rideDateTime.Hour}:{rideDateTime.Minute}.",
                 UserId = booking.User.Id,
                 CreatedAt = DateTime.Now
             };
@@ -184,9 +189,11 @@ namespace CarpoolPlatformAPI.Services
             booking = await _bookingRepository.UpdateAsync(booking);
 
             var rideCreator = booking.Ride.User;
+            var rideDateTime = booking.Ride.DepartureTime;
             var notification = new Notification
             {
-                Message = $"{booking.User.FirstName} {booking.User.LastName} has cancelled their booking for your ride.",
+                Message = $"{booking.User.FirstName} {booking.User.LastName} has cancelled their booking for your ride, happening on." +
+                    $"{rideDateTime.Date}, at {rideDateTime.Hour}:{rideDateTime.Minute}.",
                 UserId = rideCreator.Id,
                 CreatedAt = DateTime.Now
             };

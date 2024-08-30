@@ -91,7 +91,8 @@ namespace CarpoolPlatformAPI.Services
 
             var notification = new Notification
             {
-                Message = $"You have successfully posted a new ride, happening on {ride.DepartureTime.Date}.",
+                Message = $"You have successfully posted a new ride, happening on " +
+                    $"{ride.DepartureTime.Date}, at {ride.DepartureTime.Hour}:{ride.DepartureTime.Minute}.",
                 UserId = user.Id,
                 CreatedAt = DateTime.Now
             };
@@ -150,7 +151,8 @@ namespace CarpoolPlatformAPI.Services
                     var rideCreator = ride.User;
                     var notification = new Notification
                     {
-                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime.Date}," +
+                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on " +
+                            $"{ride.DepartureTime.Date}, at {ride.DepartureTime.Hour}:{ride.DepartureTime.Minute}." +
                                   $" has been updated.",
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
@@ -199,8 +201,8 @@ namespace CarpoolPlatformAPI.Services
                     booking.UpdatedAt = DateTime.Now;
                     var notification = new Notification
                     {
-                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on {ride.DepartureTime.Date}," +
-                                  $" has been cancelled.",
+                        Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on " +
+                            $"{ride.DepartureTime.Date}, at  {ride.DepartureTime.Hour}:{ride.DepartureTime.Minute}, has been cancelled.",
                         UserId = booking.UserId,
                         CreatedAt = DateTime.Now
                     };

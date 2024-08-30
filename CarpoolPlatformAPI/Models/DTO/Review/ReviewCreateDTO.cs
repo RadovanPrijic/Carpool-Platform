@@ -10,13 +10,13 @@ namespace CarpoolPlatformAPI.Models.DTO.Review
 
         [Required(ErrorMessage = "You have not entered a comment.")]
         [StringLength(1000, ErrorMessage = "The review comment should be up to 1000 characters long.")]
-        public string Comment { get; set; }
+        public string Comment { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not provided a reviewer ID with your review.")]
-        public string ReviewerId { get; set; }
+        public string ReviewerId { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not provided a reviewee ID with your review.")]
-        public string RevieweeId { get; set; }
+        public string RevieweeId { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not provided a ride ID with your review.")]
         public int RideId { get; set; }

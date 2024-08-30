@@ -1,12 +1,10 @@
-﻿using AutoMapper;
-using CarpoolPlatformAPI.CustomActionFilters;
+﻿using CarpoolPlatformAPI.CustomActionFilters;
 using CarpoolPlatformAPI.Models.DTO.Ride;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
-using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
@@ -44,10 +42,10 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("all/{id}")]
-        public async Task<IActionResult> GetAllRidesForUser([FromRoute] string userId)
+        public async Task<IActionResult> GetAllRidesForUser([FromRoute] string id)
         {
             var serviceResponse = await _rideService.GetAllRidesAsync(
-                r => r.UserId == userId &&
+                r => r.UserId == id &&
                      r.DeletedAt == null,
                      includeProperties: "User, User.Picture, Bookings");
             return ValidationService.HandleServiceResponse(serviceResponse);

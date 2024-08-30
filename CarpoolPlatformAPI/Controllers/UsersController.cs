@@ -72,9 +72,9 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("notifications/{id}")]
-        public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string userId)
+        public async Task<IActionResult> GetAllNotificationsForUser([FromRoute] string id)
         {
-            var serviceResponse = await _userService.GetAllNotificationsForUser(userId);
+            var serviceResponse = await _userService.GetAllNotificationsForUser(id);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -97,50 +97,52 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpPost]
         [Route("initiate-email-confirmation/{id}")]
-        public async Task<IActionResult> initiateEmailConfirmationAsync([FromRoute] string id)
+        public async Task<IActionResult> InitiateEmailConfirmationAsync([FromRoute] string id)
         {
-            var serviceResponse = await _userService.initiateEmailConfirmationAsync(id);
+            var serviceResponse = await _userService.InitiateEmailConfirmationAsync(id);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [Route("initiate-email-change/{id}")]
         [ValidateModel]
-        public async Task<IActionResult> initiateEmailChangeAsync([FromRoute] string id, [FromBody] EmailDTO emailDTO)
+        public async Task<IActionResult> InitiateEmailChangeAsync([FromRoute] string id, [FromBody] EmailDTO emailDTO)
         {
-            var serviceResponse = await _userService.initiateEmailChangeAsync(id, emailDTO);
+            var serviceResponse = await _userService.InitiateEmailChangeAsync(id, emailDTO);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [Route("confirm-email")]
-        public async Task<IActionResult> confirmEmailAsync(
+        public async Task<IActionResult> ConfirmEmailAsync(
             [FromQuery] string id, 
             [FromQuery] string confirmationToken, 
             [FromQuery] bool emailChange, 
             [FromQuery] string? newEmail)
         {
-            var serviceResponse = await _userService.confirmEmailAsync(id, confirmationToken, emailChange, newEmail);
+            var serviceResponse = await _userService.ConfirmEmailAsync(id, confirmationToken, emailChange, newEmail);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [Route("initiate-password-reset/{email}")]
-        public async Task<IActionResult> initiatePasswordResetAsync([FromRoute] string email)
+        [AllowAnonymous]
+        public async Task<IActionResult> InitiatePasswordResetAsync([FromRoute] string email)
         {
-            var serviceResponse = await _userService.initiatePasswordResetAsync(email);
+            var serviceResponse = await _userService.InitiatePasswordResetAsync(email);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPost]
         [Route("reset-password")]
         [ValidateModel]
-        public async Task<IActionResult> resetPasswordAsync(
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPasswordAsync(
             [FromQuery] string email, 
             [FromQuery] string resetToken, 
             [FromBody] PasswordDTO passwordDTO)
         {
-            var serviceResponse = await _userService.resetPasswordAsync(email, resetToken, passwordDTO);
+            var serviceResponse = await _userService.ResetPasswordAsync(email, resetToken, passwordDTO);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }

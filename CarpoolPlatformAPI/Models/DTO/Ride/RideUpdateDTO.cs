@@ -5,10 +5,10 @@ namespace CarpoolPlatformAPI.Models.DTO.Ride
     public class RideUpdateDTO
     {
         [Required(ErrorMessage = "You have not chosen a starting location.")]
-        public string StartLocation { get; set; }
+        public string StartLocation { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not chosen a destination.")]
-        public string EndLocation { get; set; }
+        public string EndLocation { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not entered the time of departure.")]
         [DataType(DataType.DateTime, ErrorMessage = "The entered departure time is not a DateTime type.")]
@@ -22,7 +22,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Ride
 
         [Required(ErrorMessage = "You have not entered any information about the car.")]
         [StringLength(250, ErrorMessage = "The car information should be up to 250 characters long.")]
-        public string CarInfo { get; set; }
+        public string CarInfo { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not chosen the number of available seats.")]
         [Range(1, 4, ErrorMessage = "The number of available seats must be between 1 and 4.")]
@@ -32,7 +32,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Ride
         public bool TwoInBackseat { get; set; }
 
         [Required(ErrorMessage = "You have not entered any information about the size of your luggage space.")]
-        public string LuggageSize { get; set; }
+        public string LuggageSize { get; set; } = null!;
 
         [Required(ErrorMessage = "You have not chosen the insurance status.")]
         public bool InsuranceStatus { get; set; }
