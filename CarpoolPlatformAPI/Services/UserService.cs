@@ -194,6 +194,24 @@ namespace CarpoolPlatformAPI.Services
                 _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt)));
         }
 
+        public async Task<ServiceResponse<List<NotificationDTO>>> MarkUserNotificationsAsChecked(string id)
+        {
+            //if (_validationService.GetCurrentUserId() != id)
+            //{
+            //    return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
+            //}
+
+            var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == id && n.DeletedAt == null);
+            foreach (var notification in notifications)
+            {
+                notification.CheckedStatus = true;
+            }
+            await _notificationRepository.SaveAsync();
+
+            return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.OK,
+                _mapper.Map<List<NotificationDTO>>(notifications.OrderBy(n => n.CreatedAt)));
+        }
+
         public async Task<ServiceResponse<UserDTO?>> InitiateEmailConfirmationAsync(string id)
         {
             var user = await _userRepository.GetAsync(u => u.Id == id && u.DeletedAt == null);

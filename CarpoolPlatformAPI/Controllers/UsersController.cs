@@ -78,6 +78,14 @@ namespace CarpoolPlatformAPI.Controllers
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
+        [HttpPut]
+        [Route("notifications/{id}")]
+        public async Task<IActionResult> MarkUserNotificationsAsChecked([FromRoute] string id)
+        {
+            var serviceResponse = await _userService.MarkUserNotificationsAsChecked(id);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
         [HttpPost]
         [Route("upload-profile-picture")]
         [ValidateModel]

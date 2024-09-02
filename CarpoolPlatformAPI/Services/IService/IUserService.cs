@@ -18,6 +18,7 @@ namespace CarpoolPlatformAPI.Services.IService
             bool? notTracked = null);
         Task<ServiceResponse<UserDTO?>> UpdateUserAsync(string id, UserUpdateDTO userUpdateDTO);
         Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string id);
+        Task<ServiceResponse<List<NotificationDTO>>> MarkUserNotificationsAsChecked(string id);
         Task<ServiceResponse<UserDTO?>> InitiateEmailConfirmationAsync(string id);
         Task<ServiceResponse<UserDTO?>> InitiateEmailChangeAsync(string id, EmailDTO emailDTO);
         Task<ServiceResponse<UserDTO?>> ConfirmEmailAsync(string id, string token, bool emailChange, string? newEmail);
