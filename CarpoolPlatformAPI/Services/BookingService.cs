@@ -68,17 +68,21 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The ride has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != booking.UserId)
+            //else if (_validationService.GetCurrentUserId() != booking.UserId)
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this booking.");
+            //}
+            else if (ride.UserId == booking.UserId)
             {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this booking.");
+                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, "You are not allowed to book your own ride.");
             }
-            else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
+            else if (ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
                     "You can make a booking only up to three hours before the ride.");
             }
             else if (ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) + booking.SeatsBooked
-                     > booking.Ride.SeatsAvailable)
+                     > ride.SeatsAvailable)
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
                     "This ride has already filled its maximum capacity.");
@@ -127,10 +131,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != booking.Ride.UserId)
-            {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to accept or reject this booking.");
-            }
+            //else if (_validationService.GetCurrentUserId() != booking.Ride.UserId)
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to accept or reject this booking.");
+            //}
             else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
@@ -143,7 +147,7 @@ namespace CarpoolPlatformAPI.Services
                     "Accepting this booking would exceed the maximum number of booked seats for this ride.");
             }
 
-            booking = _mapper.Map<Booking>(bookingUpdateDTO);
+            _mapper.Map(bookingUpdateDTO, booking);
             booking.UpdatedAt = DateTime.Now;
             booking = await _bookingRepository.UpdateAsync(booking);
 
@@ -175,10 +179,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != booking.UserId)
-            {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to cancel this booking.");
-            }
+            //else if (_validationService.GetCurrentUserId() != booking.UserId)
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to cancel this booking.");
+            //}
             else if (booking.Ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, 

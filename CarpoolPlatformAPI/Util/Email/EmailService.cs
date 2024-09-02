@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using MailKit.Net.Smtp;
 using MimeKit;
+using MailKit.Security;
 
 namespace CarpoolPlatformAPI.Util.Email
 {
@@ -25,7 +26,7 @@ namespace CarpoolPlatformAPI.Util.Email
 
                 var bodyBuilder = new BodyBuilder { HtmlBody = isHtml ? body : null, TextBody = !isHtml ? body : null };
                 emailMessage.Body = bodyBuilder.ToMessageBody();
-
+                
                 using var client = new SmtpClient();
                 await client.ConnectAsync(_smtpSettings.Server, _smtpSettings.Port, _smtpSettings.EnableSsl);
                 await client.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password);
@@ -34,6 +35,7 @@ namespace CarpoolPlatformAPI.Util.Email
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
             }
         }

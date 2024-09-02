@@ -66,10 +66,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             } 
-            else if (_validationService.GetCurrentUserId() != ride.UserId)
-            {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this ride.");
-            }
+            //else if (_validationService.GetCurrentUserId() != ride.UserId)
+            //{
+            //    return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this ride.");
+            //}
             else if (rideCreateDTO.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest,
@@ -114,10 +114,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.NotFound, "The ride has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != ride.UserId)
-            {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this ride.");
-            }
+            //else if (_validationService.GetCurrentUserId() != ride.UserId)
+            //{
+            //    return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this ride.");
+            //}
             else if (ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
@@ -140,7 +140,7 @@ namespace CarpoolPlatformAPI.Services
                     "There can be only up to three available seats in a ride if the 'two in backseat' option is enabled.");
             }
 
-            ride = _mapper.Map<Ride>(rideUpdateDTO);
+            _mapper.Map(rideUpdateDTO, ride);
             ride.UpdatedAt = DateTime.Now;
             ride = await _rideRepository.UpdateAsync(ride);
 
@@ -148,7 +148,7 @@ namespace CarpoolPlatformAPI.Services
             {
                 if (booking.BookingStatus == "accepted" || booking.BookingStatus == "requested")
                 {
-                    var rideCreator = ride.User;
+                    var rideCreator = ride.User!;
                     var notification = new Notification
                     {
                         Message = $"The ride by {rideCreator.FirstName} {rideCreator.LastName}, happening on " +
@@ -177,21 +177,19 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.NotFound, "The ride has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != ride.UserId)
-            {
-                return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this ride.");
-            }
+            //else if (_validationService.GetCurrentUserId() != ride.UserId)
+            //{
+            //    return new ServiceResponse<RideDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this ride.");
+            //}
             else if (ride.DepartureTime < DateTime.Now.AddHours(3))
             {
                 return new ServiceResponse<RideDTO?>(HttpStatusCode.BadRequest, 
                     "You can remove a ride only up to three hours before it happens.");
             }
 
-            var rideCreator = ride.User;
-            rideCreator.Rides.Remove(ride);
-            rideCreator.UpdatedAt = DateTime.Now;
             ride.DeletedAt = DateTime.Now;
             ride = await _rideRepository.UpdateAsync(ride);
+            var rideCreator = ride.User;
 
             foreach (var booking in ride.Bookings)
             {
@@ -212,7 +210,7 @@ namespace CarpoolPlatformAPI.Services
                 }
             }
 
-            return new ServiceResponse<RideDTO?>(HttpStatusCode.OK, _mapper.Map<RideDTO>(ride));
+            return new ServiceResponse<RideDTO?>(HttpStatusCode.NoContent);
         }
 
         public async Task<ServiceResponse<List<LocationDTO>>> GetAllLocationsAsync(Expression<Func<Location, bool>>? filter = null)

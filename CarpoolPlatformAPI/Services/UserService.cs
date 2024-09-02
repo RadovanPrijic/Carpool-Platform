@@ -58,7 +58,7 @@ namespace CarpoolPlatformAPI.Services
 
                 if (isValid)
                 {
-                    var roles = (List<string>)await _userManager.GetRolesAsync(user);
+                    //var roles = (List<string>)await _userManager.GetRolesAsync(user);
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var key = Encoding.UTF8.GetBytes(_secretKey);
                     var tokenDescriptor = new SecurityTokenDescriptor
@@ -67,7 +67,7 @@ namespace CarpoolPlatformAPI.Services
                         [
                             new Claim(ClaimTypes.NameIdentifier, user.Id),
                             new Claim(ClaimTypes.Email, user.Email!),
-                            new Claim(ClaimTypes.Role, roles.FirstOrDefault()!)
+                            //new Claim(ClaimTypes.Role, roles.FirstOrDefault()!)
                         ]),
                         Expires = DateTime.UtcNow.AddHours(4),
                         SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -110,10 +110,10 @@ namespace CarpoolPlatformAPI.Services
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Basic_User");
+                    //await _userManager.AddToRoleAsync(user, "Basic_User");
                     var userToReturn = await _userRepository.GetAsync(u => u.Email == registrationRequestDTO.Email);
 
-                    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(userToReturn!);
                     var subject = "Email confirmation";
                     var body = $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}&confirmationToken={confirmationToken}'>" +
                         $"here</a> to confirm your email address.</p>";
@@ -133,6 +133,7 @@ namespace CarpoolPlatformAPI.Services
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
             }
 
@@ -168,12 +169,12 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != user.Id)
-            {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to update this user.");
-            }
+            //else if (_validationService.GetCurrentUserId() != user.Id)
+            //{
+            //    return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to update this user.");
+            //}
 
-            user = _mapper.Map<User>(userUpdateDTO);
+            _mapper.Map(userUpdateDTO, user);
             user.UpdatedAt = DateTime.Now;
             user = await _userRepository.UpdateAsync(user);
 
@@ -182,10 +183,10 @@ namespace CarpoolPlatformAPI.Services
 
         public async Task<ServiceResponse<List<NotificationDTO>>> GetAllNotificationsForUser(string id)
         {
-            if (_validationService.GetCurrentUserId() != id)
-            {
-                return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
-            }
+            //if (_validationService.GetCurrentUserId() != id)
+            //{
+            //    return new ServiceResponse<List<NotificationDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
+            //}
 
             var notifications = await _notificationRepository.GetAllAsync(n => n.UserId == id && n.DeletedAt == null);
 
@@ -201,10 +202,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != id)
-            {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
-            }
+            //else if (_validationService.GetCurrentUserId() != id)
+            //{
+            //    return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            //}
             else if (user.EmailConfirmed)
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "Your email address has already been confirmed.");
@@ -227,10 +228,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != id)
-            {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
-            }
+            //else if (_validationService.GetCurrentUserId() != id)
+            //{
+            //    return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            //}
 
             var changeToken = await _userManager.GenerateChangeEmailTokenAsync(user, emailDTO.NewEmail);
             var subject = "Email change";
@@ -251,10 +252,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != id)
-            {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
-            }
+            //else if (_validationService.GetCurrentUserId() != id)
+            //{
+            //    return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
+            //}
             else if (!emailChange && user.EmailConfirmed)
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "Your email address has already been confirmed.");

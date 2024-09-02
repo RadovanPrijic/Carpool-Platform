@@ -13,7 +13,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Booking
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public UserDTO User { get; set; } = null!;
-        public RideDTO Ride { get; set; } = null!;
+        public int RideId { get; set; }
         public ReviewDTO? Review { get; set; }
     }
 }

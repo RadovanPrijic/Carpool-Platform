@@ -62,7 +62,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Location", b =>
@@ -92,7 +92,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Locations");
+                    b.ToTable("Locations", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Message", b =>
@@ -133,7 +133,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Notification", b =>
@@ -168,7 +168,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Picture", b =>
@@ -212,7 +212,7 @@ namespace CarpoolPlatformAPI.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Pictures");
+                    b.ToTable("Pictures", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Review", b =>
@@ -265,7 +265,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasIndex("RideId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.Ride", b =>
@@ -332,7 +332,7 @@ namespace CarpoolPlatformAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Rides");
+                    b.ToTable("Rides", (string)null);
                 });
 
             modelBuilder.Entity("CarpoolPlatformAPI.Models.Domain.User", b =>

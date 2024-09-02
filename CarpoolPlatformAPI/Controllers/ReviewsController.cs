@@ -4,12 +4,13 @@ using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class ReviewsController : ControllerBase
     {
         private readonly IReviewService _reviewService;
@@ -26,7 +27,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.RevieweeId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -37,7 +38,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.ReviewerId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -48,7 +49,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetReviewAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -57,7 +58,11 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateReview([FromBody] ReviewCreateDTO reviewCreateDTO)
         {
             var serviceResponse = await _reviewService.CreateReviewAsync(reviewCreateDTO);
-            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetReviewById), new { id = serviceResponse.Data!.Id });
+            if (serviceResponse.StatusCode == HttpStatusCode.Created)
+            {
+                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetReviewById), new { id = serviceResponse.Data!.Id });
+            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPut]

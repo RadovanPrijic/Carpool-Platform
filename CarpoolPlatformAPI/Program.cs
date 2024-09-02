@@ -11,7 +11,6 @@ using CarpoolPlatformAPI.Util.IValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -24,7 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CarpoolPlatformDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CarpoolPlatformConnectionString")));
 
-builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<CarpoolPlatformDbContext>();
+builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<CarpoolPlatformDbContext>().AddDefaultTokenProviders();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {

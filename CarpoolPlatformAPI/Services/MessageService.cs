@@ -31,15 +31,15 @@ namespace CarpoolPlatformAPI.Services
         public async Task<ServiceResponse<List<MessageDTO>>> GetAllConversationMessagesAsync(string userOneId, string userTwoId,
             string? includeProperties = null, bool? notTracked = null)
         {
-            if (_validationService.GetCurrentUserId() != userOneId || _validationService.GetCurrentUserId() != userTwoId)
-            {
-                return new ServiceResponse<List<MessageDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
-            }
+            //if (_validationService.GetCurrentUserId() != userOneId || _validationService.GetCurrentUserId() != userTwoId)
+            //{
+            //    return new ServiceResponse<List<MessageDTO>>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
+            //}
 
             var messages = await _messageRepository.GetAllAsync(
                 m => (m.SenderId == userOneId && m.ReceiverId == userTwoId) ||
                      (m.SenderId == userTwoId && m.ReceiverId == userOneId),
-                     includeProperties, 2500, 1, notTracked);
+                     includeProperties);
 
             return new ServiceResponse<List<MessageDTO>>(HttpStatusCode.OK, _mapper.Map<List<MessageDTO>>(messages));
         }
@@ -53,11 +53,11 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<MessageDTO?>(HttpStatusCode.NotFound, "The message has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != message.SenderId || 
-                     _validationService.GetCurrentUserId() != message.ReceiverId)
-            {
-                return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
-            }
+            //else if (_validationService.GetCurrentUserId() != message.SenderId || 
+            //         _validationService.GetCurrentUserId() != message.ReceiverId)
+            //{
+            //    return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to access this information.");
+            //}
 
             return new ServiceResponse<MessageDTO?>(HttpStatusCode.OK, _mapper.Map<MessageDTO>(message));
         }
@@ -77,9 +77,13 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<MessageDTO?>(HttpStatusCode.NotFound, "The receiver has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != messageCreateDTO.SenderId)
+            //else if (_validationService.GetCurrentUserId() != messageCreateDTO.SenderId)
+            //{
+            //    return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to send this message.");
+            //}
+            else if (sender.Id == receiver.Id)
             {
-                return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to send this message.");
+                return new ServiceResponse<MessageDTO?>(HttpStatusCode.BadRequest, "You can not send a message to yourself.");
             }
 
             sender.SentMessages.Add(message);
@@ -108,17 +112,18 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<MessageDTO?>(HttpStatusCode.NotFound, "The message has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != message.SenderId)
-            {
-                return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit or remove this message.");
-            }
+            //else if (_validationService.GetCurrentUserId() != message.SenderId)
+            //{
+            //    return new ServiceResponse<MessageDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit or remove this message.");
+            //}
 
-            if(messageUpdateDTO.Content == "This message has been deleted by the user.")
+            _mapper.Map(messageUpdateDTO, message);
+            if (messageUpdateDTO.Content == "This message has been deleted by the user.")
             {
                 message.DeletedAt = DateTime.Now;
             }
             message.UpdatedAt = DateTime.Now;
-            message = await _messageRepository.UpdateAsync(_mapper.Map<Message>(messageUpdateDTO));
+            message = await _messageRepository.UpdateAsync(message);
 
             return new ServiceResponse<MessageDTO?>(HttpStatusCode.OK, _mapper.Map<MessageDTO>(message));
         }

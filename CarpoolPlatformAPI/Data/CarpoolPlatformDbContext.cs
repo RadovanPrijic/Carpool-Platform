@@ -8,7 +8,6 @@ namespace CarpoolPlatformAPI.Data
 {
     public class CarpoolPlatformDbContext : IdentityDbContext<User>
     {
-        public DbSet<User> Users { get; set; }
         public DbSet<Ride> Rides { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Review> Reviews { get; set; }
@@ -25,7 +24,7 @@ namespace CarpoolPlatformAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            /*string basicUserRoleId = "4066da82-f923-4a73-ae50-a29a5c76c5c1";
+            string basicUserRoleId = "4066da82-f923-4a73-ae50-a29a5c76c5c1";
             string adminRoleId = "53fee358-1930-4d37-8c9c-4225365c33c1";
 
             var roles = new List<IdentityRole>
@@ -46,7 +45,7 @@ namespace CarpoolPlatformAPI.Data
                 }
             };
 
-            modelBuilder.Entity<IdentityRole>().HasData(roles);*/
+            modelBuilder.Entity<IdentityRole>().HasData(roles);
 
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new RideConfiguration());

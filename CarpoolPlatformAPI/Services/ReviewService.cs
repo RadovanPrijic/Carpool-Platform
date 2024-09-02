@@ -61,15 +61,16 @@ namespace CarpoolPlatformAPI.Services
             var reviewer = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.ReviewerId && u.DeletedAt == null);
             var reviewee = await _userRepository.GetAsync(u => u.Id == reviewCreateDTO.RevieweeId && u.DeletedAt == null,
                 includeProperties: "ReceivedReviews");
-            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId && r.DeletedAt == null);
+            var ride = await _rideRepository.GetAsync(r => r.Id == reviewCreateDTO.RideId && r.DeletedAt == null,
+                includeProperties: "Reviews");
             var booking = await _bookingRepository.GetAsync(b => b.Id == reviewCreateDTO.BookingId && b.DeletedAt == null ,
                 includeProperties: "User");
 
-            if (_validationService.GetCurrentUserId() != reviewCreateDTO.ReviewerId)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this review.");
-            }
-            else if (reviewer  == null)
+            //if (_validationService.GetCurrentUserId() != reviewCreateDTO.ReviewerId)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this review.");
+            //}
+            /*else*/ if (reviewer  == null)
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The reviewer has not been found.");
             }
@@ -85,6 +86,14 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
+            else if (reviewer.Id == reviewee.Id)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You can not review your own ride.");
+            }
+            else if(ride.Reviews.FirstOrDefault(r => r.ReviewerId == reviewer.Id && r.DeletedAt == null) != null)
+            {
+                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You have already reviewed this ride.");
+            }
             else if (ride.UserId != reviewee.Id || ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null)
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
@@ -95,10 +104,10 @@ namespace CarpoolPlatformAPI.Services
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
                     "You cannot review a ride for which you have no accepted booking.");
             }
-            else if (ride.DepartureTime > DateTime.Now)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "Only your past rides can be reviewed.");
-            }
+            //else if (ride.DepartureTime > DateTime.Now)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "Only your past rides can be reviewed.");
+            //}
 
             ride.Reviews.Add(review);
             ride.UpdatedAt = DateTime.Now;
@@ -139,10 +148,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The review has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != review.ReviewerId)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
-            }
+            //else if (_validationService.GetCurrentUserId() != review.ReviewerId)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
+            //}
 
             var reviewer = review.Reviewer;
             var reviewee = review.Reviewee;
@@ -152,7 +161,7 @@ namespace CarpoolPlatformAPI.Services
                 int numberOfReviews = reviewee.ReceivedReviews.Count;
                 reviewee.Rating = ((numberOfReviews * reviewee.Rating) + (reviewUpdateDTO.Rating - review.Rating)) / numberOfReviews;
             }
-            review = _mapper.Map<Review>(reviewUpdateDTO);
+            _mapper.Map(reviewUpdateDTO, review);
             review.UpdatedAt = DateTime.Now;
             review = await _reviewRepository.UpdateAsync(review);
 
@@ -180,28 +189,22 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The review has not been found.");
             }
-            else if(_validationService.GetCurrentUserId() != review.ReviewerId)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
-            }
+            //else if(_validationService.GetCurrentUserId() != review.ReviewerId)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Forbidden, "You are not allowed to edit this review.");
+            //}
 
-            var ride = review.Ride;
-            ride.Reviews.Remove(review);
-            ride.UpdatedAt = DateTime.Now;
-
-            var booking = review.Booking;
-            booking.Review = null;
-            booking.UpdatedAt = DateTime.Now;
-
-            var reviewer = review.Reviewer;
-            reviewer.GivenReviews.Remove(review);
-            reviewer.UpdatedAt = DateTime.Now;
-
-            var reviewee = review.Reviewee;
-            reviewee.ReceivedReviews.Remove(review);          
+            var reviewee = review.Reviewee;         
             int ratingSum = reviewee.ReceivedReviews.Sum(r => r.Rating);
             int numberOfReviews = reviewee.ReceivedReviews.Count;
-            reviewee.Rating = ratingSum / numberOfReviews;
+            if (numberOfReviews > 0)
+            {
+                reviewee.Rating = ratingSum / numberOfReviews;
+            }
+            else
+            {
+                reviewee.Rating = 0;
+            }
             reviewee.UpdatedAt = DateTime.Now;
 
             review.DeletedAt = DateTime.Now;

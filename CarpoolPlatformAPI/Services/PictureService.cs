@@ -40,10 +40,10 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<PictureDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != pictureCreateDTO.UserId)
-            {
-                return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to upload this profile picture.");
-            }
+            //else if (_validationService.GetCurrentUserId() != pictureCreateDTO.UserId)
+            //{
+            //    return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to upload this profile picture.");
+            //}
             else if (!_validationService.ValidateFileUpload(pictureCreateDTO))
             {
                 return new ServiceResponse<PictureDTO?>(HttpStatusCode.BadRequest,
@@ -97,16 +97,16 @@ namespace CarpoolPlatformAPI.Services
             var picture = await _pictureRepository.GetAsync(
                 p => p.Id == id && 
                      p.DeletedAt == null,
-                     includeProperties: "User, User.Picture");
+                     includeProperties: "User");
 
             if (picture == null)
             {
                 return new ServiceResponse<PictureDTO?>(HttpStatusCode.NotFound, "The profile picture has not been found.");
             }
-            else if (_validationService.GetCurrentUserId() != picture.User.Id)
-            {
-                return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this profile picture.");
-            }
+            //else if (_validationService.GetCurrentUserId() != picture.User.Id)
+            //{
+            //    return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to remove this profile picture.");
+            //}
 
             var user = picture.User;
             if (user.Picture != null)

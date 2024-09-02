@@ -45,7 +45,7 @@ namespace CarpoolPlatformAPI.Models.Domain
         public DateTime? UpdatedAt { get; set; }
 
         public DateTime? DeletedAt { get; set; }
-
+        
         [Required]
         public string UserId { get; set; }
 

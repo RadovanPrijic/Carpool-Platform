@@ -4,12 +4,13 @@ using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
@@ -46,7 +47,11 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateBooking([FromBody] BookingCreateDTO bookingCreateDTO)
         {
             var serviceResponse = await _bookingService.CreateBookingAsync(bookingCreateDTO);
-            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetBookingById), new { id = serviceResponse.Data!.Id });
+            if(serviceResponse.StatusCode == HttpStatusCode.Created)
+            {
+                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetBookingById), new { id = serviceResponse.Data!.Id });
+            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPut]

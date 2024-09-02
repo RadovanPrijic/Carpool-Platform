@@ -4,12 +4,13 @@ using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class MessagesController : ControllerBase
     {
         private readonly IMessageService _messageService;
@@ -39,7 +40,11 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateMessage([FromBody] MessageCreateDTO messageCreateDTO)
         {
             var serviceResponse = await _messageService.CreateMessageAsync(messageCreateDTO);
-            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetMessageById), new { id = serviceResponse.Data!.Id });
+            if (serviceResponse.StatusCode == HttpStatusCode.Created)
+            {
+                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetMessageById), new { id = serviceResponse.Data!.Id });
+            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPut]

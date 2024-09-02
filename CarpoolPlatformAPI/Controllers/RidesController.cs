@@ -5,12 +5,13 @@ using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
+using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class RidesController : ControllerBase
     {
         private readonly IRideService _rideService;
@@ -67,7 +68,11 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateRide([FromBody] RideCreateDTO rideCreateDTO)
         {
             var serviceResponse = await _rideService.CreateRideAsync(rideCreateDTO);
-            return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetRideById), new { id = serviceResponse.Data!.Id });
+            if (serviceResponse.StatusCode == HttpStatusCode.Created)
+            {
+                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetRideById), new { id = serviceResponse.Data!.Id });
+            }
+            return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
         [HttpPut]
