@@ -6,6 +6,6 @@ namespace CarpoolPlatformAPI.Util.IValidation
     {
         public string? GetCurrentUserEmail();
         public string? GetCurrentUserId();
-        public bool ValidateFileUpload(PictureCreateDTO pictureCreateDTO);
+        public bool ValidateFileUpload(IFormFile file);
     }
 }

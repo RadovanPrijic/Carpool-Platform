@@ -87,11 +87,10 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpPost]
-        [Route("upload-profile-picture")]
-        [ValidateModel]
-        public async Task<IActionResult> UploadProfilePicture([FromForm] PictureCreateDTO pictureCreateDTO)
+        [Route("upload-profile-picture/{userId}")]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile file, [FromRoute] string userId)
         {
-            var serviceResponse = await _pictureService.UploadPictureAsync(pictureCreateDTO);
+            var serviceResponse = await _pictureService.UploadPictureAsync(file, userId);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -122,9 +121,10 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpPost]
         [Route("confirm-email")]
+        [ValidateModel]
         public async Task<IActionResult> ConfirmEmailAsync(
-            [FromQuery] string id, 
-            [FromQuery] string confirmationToken, 
+            [FromQuery] string id,
+            [FromQuery] string confirmationToken,
             [FromQuery] bool emailChange, 
             [FromQuery] string? newEmail)
         {
@@ -146,8 +146,8 @@ namespace CarpoolPlatformAPI.Controllers
         [ValidateModel]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPasswordAsync(
-            [FromQuery] string email, 
-            [FromQuery] string resetToken, 
+            [FromQuery] string email,
+            [FromQuery] string resetToken,
             [FromBody] PasswordDTO passwordDTO)
         {
             var serviceResponse = await _userService.ResetPasswordAsync(email, resetToken, passwordDTO);

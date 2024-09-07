@@ -27,11 +27,11 @@ namespace CarpoolPlatformAPI.Util
             return userId;
         }
 
-        public bool ValidateFileUpload(PictureCreateDTO pictureCreateDTO)
+        public bool ValidateFileUpload(IFormFile file)
         {
             var allowedExtensions = new string[] { ".jpg", ".jpeg", ".png" };
 
-            if (!allowedExtensions.Contains(Path.GetExtension(pictureCreateDTO.File.FileName)) || pictureCreateDTO.File.Length > 10485760)
+            if (!allowedExtensions.Contains(Path.GetExtension(file.FileName)) || file.Length > 10485760)
             {
                 return false;
             }

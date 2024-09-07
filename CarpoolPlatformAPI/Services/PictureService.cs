@@ -29,10 +29,10 @@ namespace CarpoolPlatformAPI.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(PictureCreateDTO pictureCreateDTO)
+        public async Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(IFormFile file, string userId)
         {
             var user = await _userRepository.GetAsync(
-                u => u.Id == pictureCreateDTO.UserId && 
+                u => u.Id == userId && 
                      u.DeletedAt == null, 
                      includeProperties: "Picture");
 
@@ -44,7 +44,7 @@ namespace CarpoolPlatformAPI.Services
             //{
             //    return new ServiceResponse<PictureDTO?>(HttpStatusCode.Forbidden, "You are not allowed to upload this profile picture.");
             //}
-            else if (!_validationService.ValidateFileUpload(pictureCreateDTO))
+            else if (!_validationService.ValidateFileUpload(file))
             {
                 return new ServiceResponse<PictureDTO?>(HttpStatusCode.BadRequest,
                     "The profile picture has to be less than 10MB in size and its file extension must be one of the following: " +
@@ -53,7 +53,7 @@ namespace CarpoolPlatformAPI.Services
 
             var picture = user.Picture ?? new Picture
             {
-                UserId = pictureCreateDTO.UserId,
+                UserId = userId,
                 CreatedAt = DateTime.Now
             };
 
@@ -70,9 +70,9 @@ namespace CarpoolPlatformAPI.Services
                 }
             }       
 
-            picture.File = pictureCreateDTO.File;
-            picture.FileExtension = Path.GetExtension(pictureCreateDTO.File.FileName);
-            picture.FileSizeInBytes = pictureCreateDTO.File.Length;
+            picture.File = file;
+            picture.FileExtension = Path.GetExtension(file.FileName);
+            picture.FileSizeInBytes = file.Length;
             picture.FileName = Guid.NewGuid().ToString();
 
             var localFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Pictures",

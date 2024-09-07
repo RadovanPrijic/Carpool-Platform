@@ -17,6 +17,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Web;
 
 namespace CarpoolPlatformAPI.Services
 {
@@ -30,7 +31,6 @@ namespace CarpoolPlatformAPI.Services
         private readonly UserManager<User> _userManager;
         private string _secretKey;
         private string _emailConfirmationEndpoint;
-        private string _emailChangeEndpoint;
         private string _passwordResetEndpoint;
 
         public UserService(IUserRepository userRepository, INotificationRepository notificationRepository, IValidationService validationService,
@@ -44,7 +44,6 @@ namespace CarpoolPlatformAPI.Services
             _userManager = userManager;
             _secretKey = configuration.GetValue<string>("Jwt:SecretKey")!;
             _emailConfirmationEndpoint = configuration.GetValue<string>("Endpoints:EmailConfirmationEndpoint")!;
-            _emailChangeEndpoint = configuration.GetValue<string>("Endpoints:EmailChangeEndpoint")!;
             _passwordResetEndpoint = configuration.GetValue<string>("Endpoints:PasswordResetEndpoint")!;
         }
 
@@ -231,8 +230,8 @@ namespace CarpoolPlatformAPI.Services
 
             var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var subject = "Email confirmation";
-            var body = $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}&confirmationToken={confirmationToken}'>" +
-                $"here</a> to confirm your email address.</p>";
+            var body = $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}" +
+                $"&confirmationToken={HttpUtility.UrlEncode(confirmationToken)}'>here</a> to confirm your email address.</p>";
             await _emailService.SendEmailAsync(user.Email!, subject, body);
 
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
@@ -250,12 +249,16 @@ namespace CarpoolPlatformAPI.Services
             //{
             //    return new ServiceResponse<UserDTO?>(HttpStatusCode.Forbidden, "You are not allowed to do this action.");
             //}
+            else if (emailDTO.Email != user.Email) 
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "The entered email address does not match your current email adddress.");
+            }
 
             var changeToken = await _userManager.GenerateChangeEmailTokenAsync(user, emailDTO.NewEmail);
             var subject = "Email change";
             var body = 
-                $"<p>Click <a href='{_emailChangeEndpoint}?userId={user.Id}&changeToken={changeToken}&newEmail={emailDTO.NewEmail}'>" +
-                $"here</a> to change your email address.</p>";
+                $"<p>Click <a href='{_emailConfirmationEndpoint}?userId={user.Id}&changeToken={HttpUtility.UrlEncode(changeToken)}" +
+                $"&newEmail={emailDTO.NewEmail}'>here</a> to change your email address.</p>";
             await _emailService.SendEmailAsync(user.Email!, subject, body);
 
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
@@ -285,8 +288,7 @@ namespace CarpoolPlatformAPI.Services
 
             if (result.Succeeded)
             {
-                return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent, 
-                    $"Your email address has been successfully {(emailChange ? "changed" : "confirmed")}.");
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
             }
 
             return new ServiceResponse<UserDTO?>(HttpStatusCode.InternalServerError, "An unexpected error has occurred.");
@@ -304,8 +306,8 @@ namespace CarpoolPlatformAPI.Services
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
             var subject = "Password reset";
             var body =
-                $"<p>Click <a href='{_passwordResetEndpoint}?userEmail={email}&resetToken={resetToken}'> here</a> " +
-                $"to reset your password.</p>";
+                $"<p>Click <a href='{_passwordResetEndpoint}?userEmail={email}&resetToken={HttpUtility.UrlEncode(resetToken)}'>here</a>" +
+                $" to reset your password.</p>";
             await _emailService.SendEmailAsync(user.Email!, subject, body);
 
             return new ServiceResponse<UserDTO?>(HttpStatusCode.NoContent);
@@ -318,6 +320,10 @@ namespace CarpoolPlatformAPI.Services
             if (user == null)
             {
                 return new ServiceResponse<UserDTO?>(HttpStatusCode.NotFound, "The user has not been found.");
+            }
+            else if (!await _userManager.CheckPasswordAsync(user, passwordDTO.Password))
+            {
+                return new ServiceResponse<UserDTO?>(HttpStatusCode.BadRequest, "The entered password does not match your current password.");
             }
 
             IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, passwordDTO.NewPassword);

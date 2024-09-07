@@ -22,6 +22,7 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("received/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllReceivedReviewsForUser([FromRoute] string id)
         {
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
@@ -33,6 +34,7 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("given/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllGivenReviewsForUser([FromRoute] string id)
         {
             var serviceResponse = await _reviewService.GetAllReviewsAsync(

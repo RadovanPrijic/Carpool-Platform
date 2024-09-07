@@ -8,7 +8,7 @@ namespace CarpoolPlatformAPI.Services.IService
 {
     public interface IPictureService
     {
-        Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(PictureCreateDTO pictureCreateDTO);
+        Task<ServiceResponse<PictureDTO?>> UploadPictureAsync(IFormFile file, string userId);
         Task<ServiceResponse<PictureDTO?>> RemovePictureAsync(int id);
     }
 }

@@ -22,6 +22,7 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetFilteredRides(
             [FromQuery] string from,
             [FromQuery] string to,
@@ -94,6 +95,7 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("locations")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllLocations()
         {
             var serviceResponse = await _rideService.GetAllLocationsAsync();
