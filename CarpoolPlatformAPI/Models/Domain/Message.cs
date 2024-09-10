@@ -10,7 +10,7 @@ namespace CarpoolPlatformAPI.Models.Domain
         public int Id { get; set; }
 
         [Required]
-        public string Content { get; set; }
+        public string Content { get; set; } = null!;
 
         public bool ReadStatus { get; set; } = false;
 
@@ -22,12 +22,12 @@ namespace CarpoolPlatformAPI.Models.Domain
         public DateTime? DeletedAt { get; set; }
 
         [Required]
-        public string SenderId { get; set; }
+        public string SenderId { get; set; } = null!;
 
         public User Sender { get; set; } = null!;
 
         [Required]
-        public string ReceiverId { get; set; }
+        public string ReceiverId { get; set; } = null!;
 
         public User Receiver { get; set; } = null!;
     }

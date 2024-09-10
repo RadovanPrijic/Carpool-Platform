@@ -86,34 +86,34 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<ReviewDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
-            else if (reviewer.Id == reviewee.Id)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You can not review your own ride.");
-            }
-            else if(ride.Reviews.FirstOrDefault(r => r.ReviewerId == reviewer.Id && r.DeletedAt == null) != null)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You have already reviewed this ride.");
-            }
-            else if (ride.UserId != reviewee.Id || ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null)
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
-                    "The provided ride not associated with the provided reviewee and/or the provided booking. ");
-            }
-            else if (booking.User.Id != reviewer.Id || booking.BookingStatus != "accepted")
-            {
-                return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
-                    "You cannot review a ride for which you have no accepted booking.");
-            }
+            //else if (reviewer.Id == reviewee.Id)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You can not review your own ride.");
+            //}
+            //else if(ride.Reviews.FirstOrDefault(r => r.ReviewerId == reviewer.Id && r.DeletedAt == null) != null)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "You have already reviewed this ride.");
+            //}
+            //else if (ride.UserId != reviewee.Id || ride.Bookings.FirstOrDefault(b => b.UserId == reviewer.Id) == null)
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
+            //        "The provided ride is not associated with the provided reviewee and/or the provided booking. ");
+            //}
+            //else if (booking.User.Id != reviewer.Id || booking.BookingStatus != "accepted")
+            //{
+            //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest,
+            //        "You cannot review a ride for which you have no accepted booking.");
+            //}
             //else if (ride.DepartureTime > DateTime.Now)
             //{
             //    return new ServiceResponse<ReviewDTO?>(HttpStatusCode.BadRequest, "Only your past rides can be reviewed.");
             //}
 
-            ride.Reviews.Add(review);
-            ride.UpdatedAt = DateTime.Now;
-
             booking.Review = review;
             booking.UpdatedAt = DateTime.Now;
+
+            ride.Reviews.Add(review);
+            ride.UpdatedAt = DateTime.Now;
 
             reviewer.GivenReviews.Add(review);
             reviewer.UpdatedAt = DateTime.Now;
@@ -126,7 +126,7 @@ namespace CarpoolPlatformAPI.Services
 
             var notification = new Notification
             {
-                Message = $"Your ride has been reviewed by {reviewer.FirstName} ${reviewer.LastName}.",
+                Message = $"Your ride has been reviewed by {reviewer.FirstName} {reviewer.LastName}.",
                 UserId = reviewee.Id,
                 CreatedAt = DateTime.Now
             };
@@ -134,7 +134,7 @@ namespace CarpoolPlatformAPI.Services
             reviewee.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);
 
-            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.Created, _mapper.Map<ReviewDTO>(review));
+            return new ServiceResponse<ReviewDTO?>(HttpStatusCode.OK, _mapper.Map<ReviewDTO>(review));
         }
 
         public async Task<ServiceResponse<ReviewDTO?>> UpdateReviewAsync(int id, ReviewUpdateDTO reviewUpdateDTO)
@@ -142,7 +142,7 @@ namespace CarpoolPlatformAPI.Services
             var review = await _reviewRepository.GetAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewee, Reviewee.ReceivedReviews");
+                     includeProperties: "Reviewer, Reviewee, Reviewee.ReceivedReviews, Ride");
 
             if (review == null)
             {
@@ -167,7 +167,7 @@ namespace CarpoolPlatformAPI.Services
 
             var notification = new Notification
             {
-                Message = $"The review for your ride by {reviewer.FirstName} ${reviewer.LastName} has just been updated.",
+                Message = $"The review for your ride by {reviewer.FirstName} {reviewer.LastName} has just been updated.",
                 UserId = reviewee.Id,
                 CreatedAt = DateTime.Now
             };

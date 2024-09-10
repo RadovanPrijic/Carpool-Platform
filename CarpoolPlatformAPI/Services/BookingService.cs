@@ -72,21 +72,21 @@ namespace CarpoolPlatformAPI.Services
             //{
             //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to post this booking.");
             //}
-            else if (ride.UserId == booking.UserId)
-            {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, "You are not allowed to book your own ride.");
-            }
-            else if (ride.DepartureTime < DateTime.Now.AddHours(3))
-            {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
-                    "You can make a booking only up to three hours before the ride.");
-            }
-            else if (ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) + booking.SeatsBooked
-                     > ride.SeatsAvailable)
-            {
-                return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
-                    "This ride has already filled its maximum capacity.");
-            }
+            //else if (ride.UserId == booking.UserId)
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest, "You are not allowed to book your own ride.");
+            //}
+            //else if (ride.DepartureTime < DateTime.Now.AddHours(3))
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
+            //        "You can make a booking only up to three hours before the ride.");
+            //}
+            //else if (ride.Bookings.Where(b => b.BookingStatus == "accepted").Sum(b => b.SeatsBooked) + booking.SeatsBooked
+            //         > ride.SeatsAvailable)
+            //{
+            //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.BadRequest,
+            //        "This ride has already filled its maximum capacity.");
+            //}
 
             if (ride.AutomaticBooking)
             {
@@ -116,7 +116,7 @@ namespace CarpoolPlatformAPI.Services
             rideCreator.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);
 
-            return new ServiceResponse<BookingDTO?>(HttpStatusCode.Created, _mapper.Map<BookingDTO>(booking));
+            return new ServiceResponse<BookingDTO?>(HttpStatusCode.OK, _mapper.Map<BookingDTO>(booking));
         }
 
         public async Task<ServiceResponse<BookingDTO?>> UpdateBookingAsync(int id, BookingUpdateDTO bookingUpdateDTO)

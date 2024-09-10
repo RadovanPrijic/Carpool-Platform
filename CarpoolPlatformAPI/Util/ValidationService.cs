@@ -40,16 +40,8 @@ namespace CarpoolPlatformAPI.Util
         }
 
         public static IActionResult HandleServiceResponse<T>(
-            ServiceResponse<T> serviceResponse,
-            ControllerBase? controller = null,
-            string? actionName = null,
-            object? routeValues = null)
+            ServiceResponse<T> serviceResponse)
         {
-            if (serviceResponse.StatusCode == HttpStatusCode.Created && controller != null && actionName != null && routeValues != null)
-            {
-                return controller.CreatedAtAction(actionName, routeValues, serviceResponse.Data);
-            }
-
             return serviceResponse.StatusCode switch
             {
                 HttpStatusCode.OK => new OkObjectResult(serviceResponse.Data),

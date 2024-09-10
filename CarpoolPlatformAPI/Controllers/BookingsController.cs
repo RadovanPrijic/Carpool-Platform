@@ -47,10 +47,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateBooking([FromBody] BookingCreateDTO bookingCreateDTO)
         {
             var serviceResponse = await _bookingService.CreateBookingAsync(bookingCreateDTO);
-            if(serviceResponse.StatusCode == HttpStatusCode.Created)
-            {
-                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetBookingById), new { id = serviceResponse.Data!.Id });
-            }
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 

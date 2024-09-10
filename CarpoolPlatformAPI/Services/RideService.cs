@@ -100,7 +100,7 @@ namespace CarpoolPlatformAPI.Services
             user.UpdatedAt = DateTime.Now;
             await _notificationRepository.CreateAsync(notification);
 
-            return new ServiceResponse<RideDTO?>(HttpStatusCode.Created, _mapper.Map<RideDTO>(ride));
+            return new ServiceResponse<RideDTO?>(HttpStatusCode.OK, _mapper.Map<RideDTO>(ride));
         }
 
         public async Task<ServiceResponse<RideDTO?>> UpdateRideAsync(int id, RideUpdateDTO rideUpdateDTO)

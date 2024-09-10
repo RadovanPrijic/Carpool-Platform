@@ -28,7 +28,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.RevieweeId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -40,7 +40,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.ReviewerId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -51,7 +51,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetReviewAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -60,10 +60,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateReview([FromBody] ReviewCreateDTO reviewCreateDTO)
         {
             var serviceResponse = await _reviewService.CreateReviewAsync(reviewCreateDTO);
-            if (serviceResponse.StatusCode == HttpStatusCode.Created)
-            {
-                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetReviewById), new { id = serviceResponse.Data!.Id });
-            }
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 

@@ -29,13 +29,12 @@ namespace CarpoolPlatformAPI.Controllers
             [FromQuery] string date,
             [FromQuery] int seats)
         {
-            string dateFormat = "yyyy-MM-dd";
-            DateTime dateTime = DateTime.ParseExact(date, dateFormat, CultureInfo.InvariantCulture);
+            DateTime.TryParse(date, out DateTime parsedDate);
 
             var serviceResponse = await _rideService.GetAllRidesAsync(
                 r => r.StartLocation == from &&
                      r.EndLocation == to &&
-                     r.DepartureTime.Date == dateTime.Date &&
+                     r.DepartureTime.Date == parsedDate.Date &&
                      r.SeatsAvailable >= seats &&
                      r.DeletedAt == null, 
                      includeProperties: "User, User.Picture, Bookings");
@@ -55,6 +54,7 @@ namespace CarpoolPlatformAPI.Controllers
 
         [HttpGet]
         [Route("{id:int}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetRideById([FromRoute] int id)
         {
             var serviceResponse = await _rideService.GetRideAsync(
@@ -69,10 +69,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateRide([FromBody] RideCreateDTO rideCreateDTO)
         {
             var serviceResponse = await _rideService.CreateRideAsync(rideCreateDTO);
-            if (serviceResponse.StatusCode == HttpStatusCode.Created)
-            {
-                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetRideById), new { id = serviceResponse.Data!.Id });
-            }
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 

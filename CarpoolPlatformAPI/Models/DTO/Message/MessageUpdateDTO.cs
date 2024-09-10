@@ -4,8 +4,7 @@ namespace CarpoolPlatformAPI.Models.DTO.Message
 {
     public class MessageUpdateDTO
     {
-        public string? Content { get; set; }
-
-        public bool ReadStatus { get; set; } = true;
+        [Required(ErrorMessage = "You have not entered a message.")]
+        public string Content { get; set; } = null!;
     }
 }

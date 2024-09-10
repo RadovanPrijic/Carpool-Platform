@@ -20,10 +20,20 @@ namespace CarpoolPlatformAPI.Controllers
             _messageService = messageService;
         }
 
+
+        [HttpGet]
+        [Route("inbox/{id}")]
+        public async Task<IActionResult> GetAllConversationsForUser([FromRoute] string id)
+        {
+            var serviceResponse = await _messageService.GetAllConversationsForUser(id);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllConversationMessages([FromQuery] string userOne, [FromQuery] string userTwo)
         {
-            var serviceResponse = await _messageService.GetAllConversationMessagesAsync(userOne, userTwo);
+            var serviceResponse = await _messageService.GetAllConversationMessagesAsync(userOne, userTwo, 
+                includeProperties: "Sender, Receiver");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -31,7 +41,7 @@ namespace CarpoolPlatformAPI.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> GetMessageById([FromRoute] int id)
         {
-            var serviceResponse = await _messageService.GetMessageAsync(m => m.Id == id);
+            var serviceResponse = await _messageService.GetMessageAsync(m => m.Id == id, includeProperties: "Sender, Receiver");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -40,10 +50,6 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> CreateMessage([FromBody] MessageCreateDTO messageCreateDTO)
         {
             var serviceResponse = await _messageService.CreateMessageAsync(messageCreateDTO);
-            if (serviceResponse.StatusCode == HttpStatusCode.Created)
-            {
-                return ValidationService.HandleServiceResponse(serviceResponse, this, nameof(GetMessageById), new { id = serviceResponse.Data!.Id });
-            }
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -53,6 +59,15 @@ namespace CarpoolPlatformAPI.Controllers
         public async Task<IActionResult> UpdateMessage([FromRoute] int id, [FromBody] MessageUpdateDTO messageUpdateDTO)
         {
             var serviceResponse = await _messageService.UpdateMessageAsync(id, messageUpdateDTO);
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpPut]
+        [Route("chat")]
+        [ValidateModel]
+        public async Task<IActionResult> MarkConversationMessagesAsRead([FromQuery] string userId, [FromQuery] string otherUserId)
+        {
+            var serviceResponse = await _messageService.MarkConversationMessagesAsRead(userId, otherUserId);
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
     }
