@@ -28,6 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ClientApp\src\assets\fonts\" />
+    <Folder Include="ClientApp\src\assets\icons\" />
+    <Folder Include="ClientApp\src\assets\images\" />
+    <Folder Include="ClientApp\src\components\styles\" />
+    <Folder Include="ClientApp\src\features\authentication\components\" />
     <Folder Include="Migrations\" />
     <Folder Include="Pictures\" />
   </ItemGroup>
