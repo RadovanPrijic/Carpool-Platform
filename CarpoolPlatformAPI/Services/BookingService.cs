@@ -179,8 +179,7 @@ namespace CarpoolPlatformAPI.Services
             {
                 return new ServiceResponse<BookingDTO?>(HttpStatusCode.NotFound, "The booking has not been found.");
             }
-            //else if (_validationService.GetCurrentUserId() != booking.UserId ||
-            //         _validationService.GetCurrentUserId() != booking.Ride.UserId)
+            //else if (_validationService.GetCurrentUserId() != booking.UserId)
             //{
             //    return new ServiceResponse<BookingDTO?>(HttpStatusCode.Forbidden, "You are not allowed to cancel this booking.");
             //}

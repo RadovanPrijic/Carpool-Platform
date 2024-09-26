@@ -1,9 +1,11 @@
 ﻿using CarpoolPlatformAPI.CustomActionFilters;
+using CarpoolPlatformAPI.Models.Domain;
 using CarpoolPlatformAPI.Models.DTO.Booking;
 using CarpoolPlatformAPI.Services.IService;
 using CarpoolPlatformAPI.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace CarpoolPlatformAPI.Controllers
@@ -21,13 +23,45 @@ namespace CarpoolPlatformAPI.Controllers
         }
 
         [HttpGet]
-        [Route("all/{id}")]
-        public async Task<IActionResult> GetAllBookingsForUser([FromRoute] string id)
+        [Route("filtered/{id}")]
+        public async Task<IActionResult> GetFilteredBookings([FromRoute] string id, [FromQuery] string filter)
+        {
+            string includeProperties = "User, Ride, Ride.User, Review";
+            ServiceResponse<List<BookingDTO>> serviceResponse = filter switch
+            {
+                "by-user-requested" => await _bookingService.GetAllBookingsAsync(
+                                             b => b.UserId == id &&
+                                                  b.BookingStatus == "requested" &&
+                                                  b.DeletedAt == null,
+                                                  includeProperties),
+                "by-user-accepted" => await _bookingService.GetAllBookingsAsync(
+                                             b => b.UserId == id &&
+                                                  b.BookingStatus == "accepted" &&
+                                                  b.DeletedAt == null,
+                                                  includeProperties),
+                "for-user-requested" => await _bookingService.GetAllBookingsAsync(
+                                             b => b.Ride.UserId == id &&
+                                                  b.BookingStatus == "requested" &&
+                                                  b.DeletedAt == null,
+                                                  includeProperties),
+                "for-user-accepted" => await _bookingService.GetAllBookingsAsync(
+                                             b => b.Ride.UserId == id &&
+                                                  b.BookingStatus == "accepted" &&
+                                                  b.DeletedAt == null,
+                                                  includeProperties),
+                _ => new ServiceResponse<List<BookingDTO>>(HttpStatusCode.OK, [])
+            };
+            return ValidationService.HandleServiceResponse(serviceResponse);
+        }
+
+        [HttpGet]
+        [Route("for-ride/{id:int}")]
+        public async Task<IActionResult> GetAllBookingsForRide([FromRoute] int id)
         {
             var serviceResponse = await _bookingService.GetAllBookingsAsync(
-                b => b.UserId == id &&
+                b => b.Ride.Id == id &&
                      b.DeletedAt == null,
-                     includeProperties: "Ride, Review");
+                     includeProperties: "User, Ride, Ride.User, Review");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 

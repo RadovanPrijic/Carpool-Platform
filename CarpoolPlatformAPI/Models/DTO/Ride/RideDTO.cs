@@ -19,6 +19,5 @@ namespace CarpoolPlatformAPI.Models.DTO.Ride
         public bool AutomaticBooking { get; set; }
         public DateTime CreatedAt { get; set; }
         public UserDTO User { get; set; } = null!;
-        public ICollection<BookingDTO> Bookings { get; set; } = new List<BookingDTO>();
     }
 }

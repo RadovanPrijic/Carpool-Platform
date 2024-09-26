@@ -57,7 +57,8 @@ namespace CarpoolPlatformAPI.Services
                 User = _mapper.Map<UserDTO>(gm.OtherUser),
                 LastMessage = new MessageDTO
                 {
-                    Content = gm.LastMessage!.Content,
+                    Id = gm.LastMessage!.Id,
+                    Content = gm.LastMessage.Content,
                     CreatedAt = gm.LastMessage.CreatedAt,
                     ReadStatus = gm.LastMessage.ReadStatus,
                     Sender = _mapper.Map<UserDTO>(gm.LastMessage.Sender),

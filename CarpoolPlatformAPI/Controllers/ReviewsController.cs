@@ -28,7 +28,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.RevieweeId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride, Ride.User");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -40,7 +40,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetAllReviewsAsync(
                 r => r.ReviewerId == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride, Ride.User");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
@@ -51,7 +51,7 @@ namespace CarpoolPlatformAPI.Controllers
             var serviceResponse = await _reviewService.GetReviewAsync(
                 r => r.Id == id &&
                      r.DeletedAt == null,
-                     includeProperties: "Reviewer, Reviewer.Picture, Ride");
+                     includeProperties: "Reviewer, Reviewer.Picture, Ride, Ride.User");
             return ValidationService.HandleServiceResponse(serviceResponse);
         }
 
